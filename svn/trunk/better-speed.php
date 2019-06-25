@@ -61,6 +61,24 @@ function better_speed_init() {
 }
 add_action('init', 'better_speed_init');
 
+function better_speed_wp_default_scripts($scripts) {
+	$settings = get_option('better-speed-settings');
+
+	//jQuery Migrate
+	if(isset($settings['better-speed-features-migrate']) && $settings['better-speed-features-migrate']==="YES") {
+		$script = $scripts->registered['jquery'];
+		if($script->deps) {
+			$script->deps = array_diff($script->deps, array('jquery-migrate'));
+		}
+	}
+}
+add_filter('wp_default_scripts', 'better_speed_wp_default_scripts');
+
+
+/*
+------------------- Helpers (for actions/filters) -------------------
+*/
+
 function better_speed_tiny_mce_plugins_emojis($plugins) {
 	return array_diff($plugins, array('wpemoji'));
 }
@@ -84,7 +102,7 @@ function better_speed_rewrite_rules_array_embed($rules) {
 
 //add settings page
 function better_speed_menus() {
-	add_options_page(__('Better Speed','better-speed-text'), __('Better Detection','better-speed-text'), 'manage_options', 'better-speed-settings', 'better_speed_show_settings');
+	add_options_page(__('Better Speed','better-speed-text'), __('Better Speed','better-speed-text'), 'manage_options', 'better-speed-settings', 'better_speed_show_settings');
 }
 
 //add the settings
@@ -92,14 +110,16 @@ function better_speed_settings() {
 	register_setting('better-speed','better-speed-settings');
 
   add_settings_section('better-speed-section-features', __('Disable Features', 'better-speed-text'), 'better_speed_section_features', 'better-speed');
-  add_settings_field('better-speed-features-emojis', __('Disable Emojis', 'better-speed-text'), 'better_speed_features_emojis', 'better-speed', 'better-speed-section-features');
-  add_settings_field('better-speed-features-embed', __('Disable Embed', 'better-speed-text'), 'better_speed_features_embed', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-emojis', __('Emojis', 'better-speed-text'), 'better_speed_features_emojis', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-embed', __('Embed Objects', 'better-speed-text'), 'better_speed_features_embed', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-migrate', __('jQuery Migrate', 'better-speed-text'), 'better_speed_features_migrate', 'better-speed', 'better-speed-section-features');
 }
 
 //allow the settings to be stored
 add_filter('whitelist_options', function($whitelist_options) {
   $whitelist_options['better-speed'][] = 'better-speed-features-emojis';
   $whitelist_options['better-speed'][] = 'better-speed-features-embed';
+  $whitelist_options['better-speed'][] = 'better-speed-features-migrate';
   return $whitelist_options;
 });
 
@@ -114,10 +134,10 @@ function better_speed_show_settings() {
 	echo '  <div style="margin:0 0 24px 0;">';
   echo '    <a href="https://www.php.net/supported-versions.php" target="_blank"><img src="' . better_speed_badge_php() . '"></a>';
   echo '  </div>';
-  echo '  <h1>' . __('Better Detection', 'better-speed-text') . '</h1>';
+  echo '  <h1>' . __('Better Speed', 'better-speed-text') . '</h1>';
 	echo '  <p>This plugin will allow you to easily remove bloat and turn off unused features, in order to streamline your website and reduce file requests.';
 	echo '  <p>This plugin is NOT a caching plugin, but should play well with any caching plugin you decide to use.';
-	echo '  <br>';
+	echo '  <br><br>';
 	echo '  <form action="options.php" method="post">';
 	settings_fields('better-speed');
   do_settings_sections('better-speed');
@@ -150,7 +170,7 @@ function better_speed_features_emojis() {
 	if(isset($settings['better-speed-features-emojis']) && $settings['better-speed-features-emojis']==="YES") {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-emojis" name="better-speed-settings[better-speed-features-emojis]" type="checkbox" value="YES"' . $checked . '> Remove support for emojis in posts';
+  echo '<label><input id="better-speed-features-emojis" name="better-speed-settings[better-speed-features-emojis]" type="checkbox" value="YES"' . $checked . '> Remove support for emojis in posts <em>(saves at least 1 file request and ~16kb)</em>';
 }
 
 function better_speed_features_embed() {
@@ -159,7 +179,16 @@ function better_speed_features_embed() {
 	if(isset($settings['better-speed-features-embed']) && $settings['better-speed-features-embed']==="YES") {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-embed" name="better-speed-settings[better-speed-features-embed]" type="checkbox" value="YES"' . $checked . '> Remove support for embedding objects in posts';
+  echo '<label><input id="better-speed-features-embed" name="better-speed-settings[better-speed-features-embed]" type="checkbox" value="YES"' . $checked . '> Remove support for embedding objects in posts <em>(saves at least 1 file request and ~6kb)</em>';
+}
+
+function better_speed_features_migrate() {
+	$settings = get_option('better-speed-settings');
+	$checked = "";
+	if(isset($settings['better-speed-features-migrate']) && $settings['better-speed-features-migrate']==="YES") {
+		$checked = " checked";
+	}
+  echo '<label><input id="better-speed-features-migrate" name="better-speed-settings[better-speed-features-migrate]" type="checkbox" value="YES"' . $checked . '> Remove support for old jQuery features dropped in 2016 <em>(saves 1 file request and ~10kb)</em>';
 }
 
 //add actions
