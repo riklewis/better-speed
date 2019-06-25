@@ -30,16 +30,6 @@ function better_speed_log($message) {
 ----------------------------- Settings ------------------------------
 */
 
-function better_speed_admin_scripts() {
-	if($_GET["page"]==="better-speed-settings") {
-	  wp_enqueue_script('jquery-ui-core');
-	  wp_enqueue_script('jquery-ui-tabs');
-		wp_enqueue_script('better-speed-main-js', plugins_url('main.js', __FILE__),array('jquery','jquery-ui-tabs'),false,true);
-		wp_enqueue_style('jquery-ui-tabs-min-css', plugins_url('jquery-ui-tabs.min.css', __FILE__));
-	}
-}
-add_action('admin_enqueue_scripts', 'better_speed_admin_scripts');
-
 //add settings page
 function better_speed_menus() {
 	add_options_page(__('Better Speed','better-speed-text'), __('Better Detection','better-speed-text'), 'manage_options', 'better-speed-settings', 'better_speed_show_settings');
@@ -77,95 +67,13 @@ function better_speed_show_settings() {
   echo '    <a href="https://www.php.net/supported-versions.php" target="_blank"><img src="' . better_speed_badge_php() . '"></a>';
   echo '  </div>';
   echo '  <h1>' . __('Better Detection', 'better-speed-text') . '</h1>';
-	echo '  <p>This plugin will create and store hashes of content (eg. posts, pages, etc.) and monitor these moving forwards in order to detect when changes occur.  When changes are made outside of the normal working process, such as a direct database update, this will then be detected as the hash will get out of sync with the content.';
-  echo '  <div id="better-speed-tabs">';
-  echo '    <ul>';
-  echo '      <li><a href="#better-speed-tabs-errors">Errors<span id="better-speed-error-count"></span></a></li>';
-  echo '      <li><a href="#better-speed-tabs-settings">Options</a></li>';
-  //echo '      <li><a href="#better-speed-tabs-extras">Extras</a></li>';
-  echo '    </ul>';
-  echo '    <div id="better-speed-tabs-errors">';
-
-	//check if unfixed errors
-	$count = $wpdb->get_var("SELECT COUNT(*) FROM $errors WHERE fixed_date IS NULL");
-	if($count>0) {
-		echo '    	<table class="wp-list-table widefat striped">';
-		echo '      	<thead>';
-		echo '        	<tr>';
-		echo '    		    <th scope="col" id="better-speed-type" class="manage-column column-name column-primary">Type</th>';
-		echo '            <th scope="col" id="better-speed-desc" class="manage-column column-description">Title</th>';
-		echo '    		    <th scope="col" id="better-speed-indx" class="manage-column column-index">ID</th>';
-		echo '    		    <th scope="col" id="better-speed-stat" class="manage-column column-status">Status</th>';
-		echo '    		    <th scope="col" id="better-speed-cred" class="manage-column column-datetime">Created</th>';
-		echo '    		    <th scope="col" id="better-speed-modd" class="manage-column column-datetime">Modified</th>';
-		echo '    		    <th scope="col" id="better-speed-detd" class="manage-column column-datetime">Change Detected</th>';
-		echo '    		    <th scope="col" id="better-speed-actn" class="manage-column column-actions">Action</th>';
-		echo '         </tr>';
-		echo '      	</thead>';
-	  echo '        <tbody id="better-speed-list">';
-		$sql = "SELECT * FROM $errors WHERE fixed_date IS NULL ORDER BY error_date ASC";
-		$rows = $wpdb->get_results($sql);
-		foreach($rows as $row) {
-			if($row->post_id) {
-				$item = get_post($row->post_id);
-				$type = ucwords($item->post_type);
-				$desc = '<a href="' . get_permalink($item->ID) . '" target="blank">' . $item->post_title . ' <span class="dashicons dashicons-external"></span></a>';
-				$indx = $item->ID;
-				$stat = ucwords($item->post_status);
-				$cred = date($frmt, strtotime($item->post_date));
-				$modd = date($frmt, strtotime($item->post_modified));
-			}
-			else {
-				$type = "File";
-				$desc = $row->filename;
-				$indx = "";
-				$stat = ""; //added/updated/deleted?
-				$cred = ""; //file created date
-				$modd = ""; //file modified date
-			}
-			echo '    		  <tr class="inactive">';
-			echo '            <td class="column-primary">' . $type . '</td>';
-			echo '            <td class="column-description desc">' . $desc . '</td>';
-			echo '            <td class="column-index">' . $indx . '</td>';
-			echo '            <td class="column-status">' . $stat . '</td>';
-			echo '            <td class="column-datetime">' . $cred . '</td>';
-			echo '            <td class="column-datetime">' . $modd . '</td>';
-			echo '            <td class="column-datetime">' . date($frmt, strtotime($row->error_date)) . '</td>';
-			echo '            <td class="column-actions">';
-			echo '              <input type="button" id="action-fix-' . $row->error_id . '" class="button button-primary action-fixed" value="Fixed">';
-			echo '              <input type="button" id="action-ign-' . $row->error_id . '" class="button button-secondary action-ignore" value="Ignore">';
-			echo '            </td>';
-			echo '          </tr>';
-		}
-		echo '        </tbody>';
-		echo '      	<tfoot>';
-		echo '        	<tr>';
-		echo '    		    <th scope="col" class="manage-column column-name column-primary">Type</th>';
-		echo '            <th scope="col" class="manage-column column-description">Title</th>';
-		echo '    		    <th scope="col" class="manage-column column-index">ID</th>';
-		echo '    		    <th scope="col" class="manage-column column-status">Status</th>';
-		echo '    		    <th scope="col" class="manage-column column-datetime">Created</th>';
-		echo '    		    <th scope="col" class="manage-column column-datetime">Modified</th>';
-		echo '    		    <th scope="col" class="manage-column column-datetime">Change Detected</th>';
-		echo '    		    <th scope="col" class="manage-column column-actions">Action</th>';
-		echo '         </tr>';
-		echo '        </tfoot>';
-		echo '      </table>';
-	}
-	else {
-		echo '      <p>No new errors have been detected - yay!</p>';
-	}
-	echo '    </div>';
-	echo '    <div id="better-speed-tabs-settings">';
-	echo '      <form action="options.php" method="post">';
+	echo '  <p>This plugin will allow you to easily remove bloat and turn off unused features, in order to streamline your website and reduce file requests.';
+	echo '  <p>This plugin is NOT a caching plugin, but should play well with any caching plugin you decide to use.';
+	echo '  <form action="options.php" method="post">';
 	settings_fields('better-speed');
   do_settings_sections('better-speed');
 	submit_button();
-  echo '      </form>';
-	echo '    </div>';
-	//echo '    <div id="better-speed-tabs-extras">';
-	//echo '    </div>';
-	echo '  </div>';
+  echo '  </form>';
   echo '</div>';
 }
 
