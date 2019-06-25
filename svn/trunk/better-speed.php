@@ -143,6 +143,37 @@ function better_speed_show_settings() {
   do_settings_sections('better-speed');
 	submit_button();
   echo '  </form>';
+
+  //estimated savings
+	$reqs = 0;
+	$size = 0;
+	$settings = get_option('better-speed-settings');
+	if(isset($settings['better-speed-features-emojis']) && $settings['better-speed-features-emojis']==="YES") {
+    $reqs += 1;
+		$size += 16;
+	}
+	if(isset($settings['better-speed-features-embed']) && $settings['better-speed-features-embed']==="YES") {
+    $reqs += 1;
+		$size += 6;
+	}
+	if(isset($settings['better-speed-features-migrate']) && $settings['better-speed-features-migrate']==="YES") {
+		$reqs += 1;
+		$size += 10;
+	}
+	echo '  <h2>Estimated Savings</h2>';
+  echo '  <hr>';
+  echo '  <table class="form-table">';
+  echo '    <tbody>';
+	echo '      <tr>';
+	echo '        <th scope="row">File Requests</th>';
+	echo '        <td>' . $reqs . '</td>';
+	echo '      </tr>';
+	echo '      <tr>';
+	echo '        <th scope="row">File Size</th>';
+	echo '        <td>' . ($size>=1024 ? (number_format($size/1024,1)) . 'Mb' : $size . 'kb') . '</td>';
+	echo '      </tr>';
+	echo '    </tbody>';
+  echo '  </table>';
   echo '</div>';
 }
 
