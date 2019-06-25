@@ -27,6 +27,58 @@ function better_speed_log($message) {
 }
 
 /*
+-------------------------- Remove Features --------------------------
+*/
+
+function better_speed_init() {
+	global $wp;
+	$settings = get_option('better-speed-settings');
+
+	//Emojis
+	if(isset($settings['better-speed-features-emojis']) && $settings['better-speed-features-emojis']==="YES") {
+		remove_action('wp_head', 'print_emoji_detection_script', 7);
+		remove_action('admin_print_scripts', 'print_emoji_detection_script');
+		remove_action('wp_print_styles', 'print_emoji_styles');
+		remove_action('admin_print_styles', 'print_emoji_styles');
+		remove_filter('the_content_feed', 'wp_staticize_emoji');
+		remove_filter('comment_text_rss', 'wp_staticize_emoji');
+		remove_filter('wp_mail', 'wp_staticize_emoji_for_email');
+		add_filter('tiny_mce_plugins', 'better_speed_tiny_mce_plugins_emojis');
+	}
+
+	//Embed
+	if(isset($settings['better-speed-features-embed']) && $settings['better-speed-features-embed']==="YES") {
+		$wp->public_query_vars = array_diff($wp->public_query_vars, array('embed'));
+		remove_action('rest_api_init', 'wp_oembed_register_route');
+		remove_filter('oembed_dataparse', 'wp_filter_oembed_result', 10);
+		remove_action('wp_head', 'wp_oembed_add_discovery_links');
+		remove_action('wp_head', 'wp_oembed_add_host_js');
+		remove_filter('pre_oembed_result', 'wp_filter_pre_oembed_result', 10);
+		add_filter('embed_oembed_discover', '__return_false' );
+		add_filter('tiny_mce_plugins', 'better_speed_tiny_mce_plugins_embed');
+		add_filter('rewrite_rules_array', 'better_speed_rewrite_rules_array_embed');
+	}
+}
+add_action('init', 'better_speed_init');
+
+function better_speed_tiny_mce_plugins_emojis($plugins) {
+	return array_diff($plugins, array('wpemoji'));
+}
+
+function better_speed_tiny_mce_plugins_embed($plugins) {
+	return array_diff($plugins, array('wpembed'));
+}
+
+function better_speed_rewrite_rules_array_embed($rules) {
+	foreach($rules as $rule => $rewrite) {
+		if(strpos($rewrite, 'embed=true')!==false) {
+			unset($rules[$rule]);
+		}
+	}
+	return $rules;
+}
+
+/*
 ----------------------------- Settings ------------------------------
 */
 
@@ -39,24 +91,20 @@ function better_speed_menus() {
 function better_speed_settings() {
 	register_setting('better-speed','better-speed-settings');
 
-  add_settings_section('better-speed-section-notify', __('Notifications', 'better-speed-text'), 'better_speed_section_notify', 'better-speed');
-  add_settings_field('better-speed-notify-email', __('Email Address', 'better-speed-text'), 'better_speed_notify_email', 'better-speed', 'better-speed-section-notify');
-  add_settings_field('better-speed-notify-slack', __('Slack WebHook URL', 'better-speed-text'), 'better_speed_notify_slack', 'better-speed', 'better-speed-section-notify');
+  add_settings_section('better-speed-section-features', __('Disable Features', 'better-speed-text'), 'better_speed_section_features', 'better-speed');
+  add_settings_field('better-speed-features-emojis', __('Disable Emojis', 'better-speed-text'), 'better_speed_features_emojis', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-embed', __('Disable Embed', 'better-speed-text'), 'better_speed_features_embed', 'better-speed', 'better-speed-section-features');
 }
 
 //allow the settings to be stored
 add_filter('whitelist_options', function($whitelist_options) {
-  $whitelist_options['better-speed'][] = 'better-speed-notify-email';
-  $whitelist_options['better-speed'][] = 'better-speed-notify-slack';
+  $whitelist_options['better-speed'][] = 'better-speed-features-emojis';
+  $whitelist_options['better-speed'][] = 'better-speed-features-embed';
   return $whitelist_options;
 });
 
 //define output for settings page
 function better_speed_show_settings() {
-	global $wpdb;
-	$errors = $wpdb->prefix . "better_speed_errors";
-	$frmt = get_option('time_format') . ', ' . get_option('date_format');
-
   echo '<div class="wrap">';
   echo '  <div style="padding:12px;background-color:white;margin:24px 0;">';
   echo '    <a href="https://bettersecurity.co" target="_blank" style="display:inline-block;width:100%;">';
@@ -69,6 +117,7 @@ function better_speed_show_settings() {
   echo '  <h1>' . __('Better Detection', 'better-speed-text') . '</h1>';
 	echo '  <p>This plugin will allow you to easily remove bloat and turn off unused features, in order to streamline your website and reduce file requests.';
 	echo '  <p>This plugin is NOT a caching plugin, but should play well with any caching plugin you decide to use.';
+	echo '  <br>';
 	echo '  <form action="options.php" method="post">';
 	settings_fields('better-speed');
   do_settings_sections('better-speed');
@@ -90,28 +139,27 @@ function better_speed_badge_php() {
 }
 
 //define output for settings section
-function better_speed_section_notify() {
+function better_speed_section_features() {
   echo '<hr>';
 }
 
 //defined output for settings
-function better_speed_notify_email() {
+function better_speed_features_emojis() {
 	$settings = get_option('better-speed-settings');
-	$value = "";
-	if(isset($settings['better-speed-notify-email']) && $settings['better-speed-notify-email']!=="") {
-		$value = $settings['better-speed-notify-email'];
+	$checked = "";
+	if(isset($settings['better-speed-features-emojis']) && $settings['better-speed-features-emojis']==="YES") {
+		$checked = " checked";
 	}
-  echo '<input id="better-speed" name="better-speed-settings[better-speed-notify-email]" type="email" size="50" value="' . str_replace('"', '&quot;', $value) . '">';
+  echo '<label><input id="better-speed-features-emojis" name="better-speed-settings[better-speed-features-emojis]" type="checkbox" value="YES"' . $checked . '> Remove support for emojis in posts';
 }
 
-function better_speed_notify_slack() {
+function better_speed_features_embed() {
 	$settings = get_option('better-speed-settings');
-	$value = "";
-	if(isset($settings['better-speed-notify-slack']) && $settings['better-speed-notify-slack']!=="") {
-		$value = $settings['better-speed-notify-slack'];
+	$checked = "";
+	if(isset($settings['better-speed-features-embed']) && $settings['better-speed-features-embed']==="YES") {
+		$checked = " checked";
 	}
-  echo '<input id="better-speed" name="better-speed-settings[better-speed-notify-slack]" type="url" size="50" value="' . str_replace('"', '&quot;', $value) . '">';
-	echo '<br><small><em>See Slack\'s <a href="https://slack.com/services/new/incoming-webhook">Channel Settings &gt; Add an App &gt; Incoming WebHooks</a> menu.</em></small>';
+  echo '<label><input id="better-speed-features-embed" name="better-speed-settings[better-speed-features-embed]" type="checkbox" value="YES"' . $checked . '> Remove support for embedding objects in posts';
 }
 
 //add actions
