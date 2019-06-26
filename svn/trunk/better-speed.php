@@ -83,6 +83,11 @@ function better_speed_init() {
 	if(better_speed_check_setting('manifest')) {
 		remove_action('wp_head', 'wlwmanifest_link');
 	}
+
+	//RSD Link
+	if(better_speed_check_setting('rsdlink')) {
+		remove_action('wp_head', 'rsd_link');
+	}
 }
 add_action('init', 'better_speed_init');
 
@@ -122,6 +127,7 @@ function better_speed_settings() {
   add_settings_field('better-speed-features-migrate', __('jQuery Migrate', 'better-speed-text'), 'better_speed_features_migrate', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-xmlrpc', __('XML-RPC + Pingback', 'better-speed-text'), 'better_speed_features_xmlrpc', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-manifest', __('WLW Manifest', 'better-speed-text'), 'better_speed_features_manifest', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-rsdlink', __('Really Simple Discovery', 'better-speed-text'), 'better_speed_features_rsdlink', 'better-speed', 'better-speed-section-features');
 }
 
 //allow the settings to be stored
@@ -131,6 +137,7 @@ add_filter('whitelist_options', function($whitelist_options) {
   $whitelist_options['better-speed'][] = 'better-speed-features-migrate';
   $whitelist_options['better-speed'][] = 'better-speed-features-xmlrpc';
   $whitelist_options['better-speed'][] = 'better-speed-features-manifest';
+  $whitelist_options['better-speed'][] = 'better-speed-features-rsdlink';
   return $whitelist_options;
 });
 
@@ -243,6 +250,14 @@ function better_speed_features_manifest() {
 		$checked = " checked";
 	}
   echo '<label><input id="better-speed-features-manifest" name="better-speed-settings[better-speed-features-manifest]" type="checkbox" value="YES"' . $checked . '> Remove the Windows Live Writer manifest tag';
+}
+
+function better_speed_features_rsdlink() {
+	$checked = "";
+	if(better_speed_check_setting('rsdlink')) {
+		$checked = " checked";
+	}
+  echo '<label><input id="better-speed-features-rsdlink" name="better-speed-settings[better-speed-features-rsdlink]" type="checkbox" value="YES"' . $checked . '> Remove the Really Simple Discovery (RSD) tag';
 }
 
 //add actions
