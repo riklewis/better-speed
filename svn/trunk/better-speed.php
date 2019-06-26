@@ -78,6 +78,14 @@ function better_speed_init() {
 	  });
 	}
 
+	//Generator
+	if(better_speed_check_setting('generator')) {
+		remove_action('wp_head', 'wp_generator');
+		add_filter('the_generator', function() {
+			return '';
+		});
+	}
+
 	//WLW Manifest
 	if(better_speed_check_setting('manifest')) {
 		remove_action('wp_head', 'wlwmanifest_link');
@@ -150,6 +158,7 @@ function better_speed_settings() {
   add_settings_field('better-speed-features-dashicons', __('Dashicons', 'better-speed-text'), 'better_speed_features_dashicons', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-heartbeat', __('Heartbeat', 'better-speed-text'), 'better_speed_features_heartbeat', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-xmlrpc', __('XML-RPC + Pingback', 'better-speed-text'), 'better_speed_features_xmlrpc', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-generator', __('Generator', 'better-speed-text'), 'better_speed_features_generator', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-manifest', __('WLW Manifest', 'better-speed-text'), 'better_speed_features_manifest', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-rsdlink', __('Really Simple Discovery', 'better-speed-text'), 'better_speed_features_rsdlink', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-shortlink', __('Short Link', 'better-speed-text'), 'better_speed_features_shortlink', 'better-speed', 'better-speed-section-features');
@@ -162,6 +171,7 @@ add_filter('whitelist_options', function($whitelist_options) {
   $whitelist_options['better-speed'][] = 'better-speed-features-migrate';
   $whitelist_options['better-speed'][] = 'better-speed-features-dashicons';
   $whitelist_options['better-speed'][] = 'better-speed-features-heartbeat';
+  $whitelist_options['better-speed'][] = 'better-speed-features-generator';
   $whitelist_options['better-speed'][] = 'better-speed-features-xmlrpc';
   $whitelist_options['better-speed'][] = 'better-speed-features-manifest';
   $whitelist_options['better-speed'][] = 'better-speed-features-rsdlink';
@@ -294,6 +304,14 @@ function better_speed_features_xmlrpc() {
 		$checked = " checked";
 	}
   echo '<label><input id="better-speed-features-xmlrpc" name="better-speed-settings[better-speed-features-xmlrpc]" type="checkbox" value="YES"' . $checked . '> Remove support for third-party application access <em>(such as mobile apps)</em>';
+}
+
+function better_speed_features_generator() {
+	$checked = "";
+	if(better_speed_check_setting('generator')) {
+		$checked = " checked";
+	}
+  echo '<label><input id="better-speed-features-generator" name="better-speed-settings[better-speed-features-generator]" type="checkbox" value="YES"' . $checked . '> Remove the generator tag <em>(includes Wordpress version number)</em>';
 }
 
 function better_speed_features_manifest() {
