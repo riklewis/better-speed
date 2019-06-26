@@ -68,6 +68,21 @@ function better_speed_init() {
 			return $rules;
 		});
 	}
+
+	//XML-RPC
+	if(better_speed_check_setting('xmlrpc')) {
+		add_filter('xmlrpc_enabled', '__return_false');
+		add_filter('pings_open', '__return_false', 9999);
+	  add_filter('wp_headers', function($headers) {
+	    unset($headers['X-Pingback'], $headers['x-pingback']);
+	    return $headers;
+	  });
+	}
+
+	//WLW Manifest
+	if(better_speed_check_setting('manifest')) {
+		remove_action('wp_head', 'wlwmanifest_link');
+	}
 }
 add_action('init', 'better_speed_init');
 
@@ -81,16 +96,6 @@ function better_speed_wp_default_scripts($scripts) {
 	}
 }
 add_filter('wp_default_scripts', 'better_speed_wp_default_scripts');
-
-//XML-RPC
-if(better_speed_check_setting('xmlrpc')) {
-	add_filter('xmlrpc_enabled', '__return_false');
-	add_filter('pings_open', '__return_false', 9999);
-  add_filter('wp_headers', function($headers) {
-    unset($headers['X-Pingback'], $headers['x-pingback']);
-    return $headers;
-  });
-}
 
 /*
 ----------------------------- Settings ------------------------------
@@ -116,6 +121,7 @@ function better_speed_settings() {
   add_settings_field('better-speed-features-embed', __('Embed Objects', 'better-speed-text'), 'better_speed_features_embed', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-migrate', __('jQuery Migrate', 'better-speed-text'), 'better_speed_features_migrate', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-xmlrpc', __('XML-RPC + Pingback', 'better-speed-text'), 'better_speed_features_xmlrpc', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-manifest', __('WLW Manifest', 'better-speed-text'), 'better_speed_features_manifest', 'better-speed', 'better-speed-section-features');
 }
 
 //allow the settings to be stored
@@ -124,6 +130,7 @@ add_filter('whitelist_options', function($whitelist_options) {
   $whitelist_options['better-speed'][] = 'better-speed-features-embed';
   $whitelist_options['better-speed'][] = 'better-speed-features-migrate';
   $whitelist_options['better-speed'][] = 'better-speed-features-xmlrpc';
+  $whitelist_options['better-speed'][] = 'better-speed-features-manifest';
   return $whitelist_options;
 });
 
@@ -228,6 +235,14 @@ function better_speed_features_xmlrpc() {
 		$checked = " checked";
 	}
   echo '<label><input id="better-speed-features-xmlrpc" name="better-speed-settings[better-speed-features-xmlrpc]" type="checkbox" value="YES"' . $checked . '> Remove support for third-party application access, such as mobile apps';
+}
+
+function better_speed_features_manifest() {
+	$checked = "";
+	if(better_speed_check_setting('manifest')) {
+		$checked = " checked";
+	}
+  echo '<label><input id="better-speed-features-manifest" name="better-speed-settings[better-speed-features-manifest]" type="checkbox" value="YES"' . $checked . '> Remove the Windows Live Writer manifest tag';
 }
 
 //add actions
