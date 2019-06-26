@@ -69,6 +69,14 @@ function better_speed_init() {
 		});
 	}
 
+	//Dashicons
+	if(better_speed_check_setting('dashicons') && !is_user_logged_in()) {
+		add_action('wp_enqueue_scripts', function() {
+      wp_dequeue_style('dashicons');
+      wp_deregister_style('dashicons');
+		});
+	}
+
 	//XML-RPC
 	if(better_speed_check_setting('xmlrpc')) {
 		add_filter('xmlrpc_enabled', '__return_false');
@@ -131,6 +139,7 @@ function better_speed_settings() {
   add_settings_field('better-speed-features-emojis', __('Emojis', 'better-speed-text'), 'better_speed_features_emojis', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-embed', __('Embed Objects', 'better-speed-text'), 'better_speed_features_embed', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-migrate', __('jQuery Migrate', 'better-speed-text'), 'better_speed_features_migrate', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-dashicons', __('Dashicons', 'better-speed-text'), 'better_speed_features_dashicons', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-xmlrpc', __('XML-RPC + Pingback', 'better-speed-text'), 'better_speed_features_xmlrpc', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-manifest', __('WLW Manifest', 'better-speed-text'), 'better_speed_features_manifest', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-rsdlink', __('Really Simple Discovery', 'better-speed-text'), 'better_speed_features_rsdlink', 'better-speed', 'better-speed-section-features');
@@ -142,6 +151,7 @@ add_filter('whitelist_options', function($whitelist_options) {
   $whitelist_options['better-speed'][] = 'better-speed-features-emojis';
   $whitelist_options['better-speed'][] = 'better-speed-features-embed';
   $whitelist_options['better-speed'][] = 'better-speed-features-migrate';
+  $whitelist_options['better-speed'][] = 'better-speed-features-dashicons';
   $whitelist_options['better-speed'][] = 'better-speed-features-xmlrpc';
   $whitelist_options['better-speed'][] = 'better-speed-features-manifest';
   $whitelist_options['better-speed'][] = 'better-speed-features-rsdlink';
@@ -184,6 +194,10 @@ function better_speed_show_settings() {
 	if(better_speed_check_setting('migrate')) {
 		$reqs += 1;
 		$size += 10;
+	}
+	if(better_speed_check_setting('dashicons')) {
+		$reqs += 1;
+		$size += 46;
 	}
 	echo '  <h2>Estimated Savings</h2>';
   echo '  <hr>';
@@ -242,6 +256,14 @@ function better_speed_features_migrate() {
 		$checked = " checked";
 	}
   echo '<label><input id="better-speed-features-migrate" name="better-speed-settings[better-speed-features-migrate]" type="checkbox" value="YES"' . $checked . '> Remove support for old jQuery features dropped in 2016 <em>(saves 1 file request and ~10kb)</em>';
+}
+
+function better_speed_features_dashicons() {
+	$checked = "";
+	if(better_speed_check_setting('dashicons')) {
+		$checked = " checked";
+	}
+  echo '<label><input id="better-speed-features-dashicons" name="better-speed-settings[better-speed-features-dashicons]" type="checkbox" value="YES"' . $checked . '> Remove support for Dashicons <u>when not logged in</u> <em>(saves 1 file request and ~46kb)</em>';
 }
 
 function better_speed_features_xmlrpc() {
