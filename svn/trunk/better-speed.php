@@ -31,8 +31,6 @@ function better_speed_log($message) {
 */
 
 function better_speed_init() {
-	global $wp;
-
 	//Emojis
 	if(better_speed_check_setting('emojis')) {
 		remove_action('wp_head', 'print_emoji_detection_script', 7);
@@ -49,6 +47,7 @@ function better_speed_init() {
 
 	//Embed
 	if(better_speed_check_setting('embed')) {
+		global $wp;
 		$wp->public_query_vars = array_diff($wp->public_query_vars, array('embed'));
 		remove_action('rest_api_init', 'wp_oembed_register_route');
 		remove_filter('oembed_dataparse', 'wp_filter_oembed_result', 10);
@@ -66,14 +65,6 @@ function better_speed_init() {
 				}
 			}
 			return $rules;
-		});
-	}
-
-	//Dashicons
-	if(better_speed_check_setting('dashicons') && !is_user_logged_in()) {
-		add_action('wp_enqueue_scripts', function() {
-      wp_dequeue_style('dashicons');
-      wp_deregister_style('dashicons');
 		});
 	}
 
@@ -116,6 +107,23 @@ function better_speed_wp_default_scripts($scripts) {
 }
 add_filter('wp_default_scripts', 'better_speed_wp_default_scripts');
 
+function better_speed_wp_enqueue_scripts() {
+	//Dashicons
+	if(better_speed_check_setting('dashicons') && !is_user_logged_in()) {
+		wp_dequeue_style('dashicons');
+		wp_deregister_style('dashicons');
+	}
+
+	//Heartbeat
+	if(better_speed_check_setting('heartbeat')) {
+		global $pagenow;
+		if($pagenow!=='post.php' && $pagenow!=='post-new.php') {
+			wp_deregister_script('heartbeat');
+		}
+	}
+}
+add_action('wp_enqueue_scripts', 'better_speed_wp_enqueue_scripts');
+
 /*
 ----------------------------- Settings ------------------------------
 */
@@ -140,6 +148,7 @@ function better_speed_settings() {
   add_settings_field('better-speed-features-embed', __('Embed Objects', 'better-speed-text'), 'better_speed_features_embed', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-migrate', __('jQuery Migrate', 'better-speed-text'), 'better_speed_features_migrate', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-dashicons', __('Dashicons', 'better-speed-text'), 'better_speed_features_dashicons', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-heartbeat', __('Heartbeat', 'better-speed-text'), 'better_speed_features_heartbeat', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-xmlrpc', __('XML-RPC + Pingback', 'better-speed-text'), 'better_speed_features_xmlrpc', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-manifest', __('WLW Manifest', 'better-speed-text'), 'better_speed_features_manifest', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-rsdlink', __('Really Simple Discovery', 'better-speed-text'), 'better_speed_features_rsdlink', 'better-speed', 'better-speed-section-features');
@@ -152,6 +161,7 @@ add_filter('whitelist_options', function($whitelist_options) {
   $whitelist_options['better-speed'][] = 'better-speed-features-embed';
   $whitelist_options['better-speed'][] = 'better-speed-features-migrate';
   $whitelist_options['better-speed'][] = 'better-speed-features-dashicons';
+  $whitelist_options['better-speed'][] = 'better-speed-features-heartbeat';
   $whitelist_options['better-speed'][] = 'better-speed-features-xmlrpc';
   $whitelist_options['better-speed'][] = 'better-speed-features-manifest';
   $whitelist_options['better-speed'][] = 'better-speed-features-rsdlink';
@@ -198,6 +208,10 @@ function better_speed_show_settings() {
 	if(better_speed_check_setting('dashicons')) {
 		$reqs += 1;
 		$size += 46;
+	}
+	if(better_speed_check_setting('dashicons')) {
+		$reqs += 1;
+		$size += 6;
 	}
 	echo '  <h2>Estimated Savings</h2>';
   echo '  <hr>';
@@ -264,6 +278,14 @@ function better_speed_features_dashicons() {
 		$checked = " checked";
 	}
   echo '<label><input id="better-speed-features-dashicons" name="better-speed-settings[better-speed-features-dashicons]" type="checkbox" value="YES"' . $checked . '> Remove support for Dashicons <u>when not logged in</u> <em>(saves 1 file request and ~46kb)</em>';
+}
+
+function better_speed_features_heartbeat() {
+	$checked = "";
+	if(better_speed_check_setting('heartbeat')) {
+		$checked = " checked";
+	}
+  echo '<label><input id="better-speed-features-heartbeat" name="better-speed-settings[better-speed-features-heartbeat]" type="checkbox" value="YES"' . $checked . '> Remove support for auto-save <u>when not editing a page/post</u> <em>(saves 1 file request and ~6kb)</em>';
 }
 
 function better_speed_features_xmlrpc() {
