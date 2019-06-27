@@ -121,6 +121,19 @@ function better_speed_init() {
 			wp_die(sprintf(__("RSS Feeds disabled, please visit the <a href='%s'>homepage</a>!"), esc_url(home_url('/'))));
 		}, 1);
 	}
+
+	//REST API
+	if(better_speed_check_setting('restapi') && !is_admin()) {
+		remove_action('xmlrpc_rsd_apis', 'rest_output_rsd');
+		remove_action('wp_head', 'rest_output_link_wp_head');
+		remove_action('template_redirect', 'rest_output_link_header', 11, 0);
+    add_filter('rest_authentication_errors', function($result) {
+			if(empty($result) && !is_admin()) {
+				return new WP_Error('rest_authentication_error', __('Forbidden', 'better-speed-text'), array('status' => 403));
+			}
+			return $result;
+		}, 20);
+	}
 }
 add_action('init', 'better_speed_init');
 
@@ -183,6 +196,7 @@ function better_speed_settings() {
   add_settings_field('better-speed-features-rsdlink', __('Really Simple Discovery', 'better-speed-text'), 'better_speed_features_rsdlink', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-shortlink', __('Short Link', 'better-speed-text'), 'better_speed_features_shortlink', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-rssfeeds', __('RSS Feeds', 'better-speed-text'), 'better_speed_features_rssfeeds', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-restapi', __('REST API', 'better-speed-text'), 'better_speed_features_restapi', 'better-speed', 'better-speed-section-features');
 }
 
 //allow the settings to be stored
@@ -198,6 +212,7 @@ add_filter('whitelist_options', function($whitelist_options) {
   $whitelist_options['better-speed'][] = 'better-speed-features-rsdlink';
   $whitelist_options['better-speed'][] = 'better-speed-features-shortlink';
   $whitelist_options['better-speed'][] = 'better-speed-features-rssfeeds';
+  $whitelist_options['better-speed'][] = 'better-speed-features-restapi';
   return $whitelist_options;
 });
 
@@ -225,25 +240,52 @@ function better_speed_show_settings() {
   //estimated savings
 	$reqs = 0;
 	$size = 0;
+	$tags = 0;
 	if(better_speed_check_setting('emojis')) {
     $reqs += 1;
 		$size += 16;
+		$tags += 1;
 	}
 	if(better_speed_check_setting('embed')) {
     $reqs += 1;
 		$size += 6;
+		$tags += 1;
 	}
 	if(better_speed_check_setting('migrate')) {
 		$reqs += 1;
 		$size += 10;
+		$tags += 1;
 	}
 	if(better_speed_check_setting('dashicons')) {
 		$reqs += 1;
 		$size += 46;
+		$tags += 1;
 	}
-	if(better_speed_check_setting('dashicons')) {
+	if(better_speed_check_setting('heartbeat')) {
 		$reqs += 1;
 		$size += 6;
+		$tags += 1;
+	}
+	if(better_speed_check_setting('generator')) {
+		$tags += 1;
+	}
+	if(better_speed_check_setting('xmlrpc')) {
+		$tags += 1;
+	}
+	if(better_speed_check_setting('manifest')) {
+		$tags += 1;
+	}
+	if(better_speed_check_setting('rsdlink')) {
+		$tags += 1;
+	}
+	if(better_speed_check_setting('shortlink')) {
+		$tags += 1;
+	}
+	if(better_speed_check_setting('rssfeeds')) {
+		$tags += 2;
+	}
+	if(better_speed_check_setting('restapi')) {
+		$tags += 1;
 	}
 	echo '  <h2>Estimated Savings</h2>';
   echo '  <hr>';
@@ -256,6 +298,10 @@ function better_speed_show_settings() {
 	echo '      <tr>';
 	echo '        <th scope="row">File Size</th>';
 	echo '        <td>' . ($size>=1024 ? (number_format($size/1024,1)) . 'Mb' : $size . 'kb') . '</td>';
+	echo '      </tr>';
+	echo '      <tr>';
+	echo '        <th scope="row">HTML Tags</th>';
+	echo '        <td>' . $tags . '</td>';
 	echo '      </tr>';
 	echo '    </tbody>';
   echo '  </table>';
@@ -366,6 +412,14 @@ function better_speed_features_rssfeeds() {
 		$checked = " checked";
 	}
   echo '<label><input id="better-speed-features-rssfeeds" name="better-speed-settings[better-speed-features-rssfeeds]" type="checkbox" value="YES"' . $checked . '> Remove the RSS feed links and disable the feeds <em>(will redirect to the page instead)</em>';
+}
+
+function better_speed_features_restapi() {
+	$checked = "";
+	if(better_speed_check_setting('restapi')) {
+		$checked = " checked";
+	}
+  echo '<label><input id="better-speed-features-restapi" name="better-speed-settings[better-speed-features-restapi]" type="checkbox" value="YES"' . $checked . '> Remove the REST API links and disable the endpoints <u>when not on admin pages</u>';
 }
 
 //add actions
