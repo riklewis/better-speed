@@ -31,6 +31,16 @@ function better_speed_log($message) {
 */
 
 function better_speed_init() {
+	//Self Pingbacks
+	add_action('pre_ping', function(&$links) {
+		$home = get_option('home');
+		foreach($links as $l => $link) {
+			if(strpos($link, $home) === 0) {
+				unset($links[$l]);
+			}
+		}
+	});
+
 	//Emojis
 	if(better_speed_check_setting('emojis')) {
 		remove_action('wp_head', 'print_emoji_detection_script', 7);
