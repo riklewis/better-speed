@@ -101,6 +101,26 @@ function better_speed_init() {
 		remove_action('wp_head', 'wp_shortlink_wp_head');
 		remove_action('template_redirect', 'wp_shortlink_header', 11, 0);
 	}
+
+	//RSS Feeds
+	if(better_speed_check_setting('rssfeeds')) {
+		remove_action('wp_head', 'feed_links', 2);
+	  remove_action('wp_head', 'feed_links_extra', 3);
+    add_action('template_redirect', function() {
+			if(!is_feed() || is_404()) {
+				return;
+			}
+			if(isset($_GET['feed'])) {
+				wp_redirect(esc_url_raw(remove_query_arg('feed')), 301);
+				exit;
+			}
+			if(get_query_var('feed') !== 'old') {
+				set_query_var('feed', '');
+			}
+			redirect_canonical();
+			wp_die(sprintf(__("RSS Feeds disabled, please visit the <a href='%s'>homepage</a>!"), esc_url(home_url('/'))));
+		}, 1);
+	}
 }
 add_action('init', 'better_speed_init');
 
@@ -162,6 +182,7 @@ function better_speed_settings() {
   add_settings_field('better-speed-features-manifest', __('WLW Manifest', 'better-speed-text'), 'better_speed_features_manifest', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-rsdlink', __('Really Simple Discovery', 'better-speed-text'), 'better_speed_features_rsdlink', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-shortlink', __('Short Link', 'better-speed-text'), 'better_speed_features_shortlink', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-rssfeeds', __('RSS Feeds', 'better-speed-text'), 'better_speed_features_rssfeeds', 'better-speed', 'better-speed-section-features');
 }
 
 //allow the settings to be stored
@@ -176,6 +197,7 @@ add_filter('whitelist_options', function($whitelist_options) {
   $whitelist_options['better-speed'][] = 'better-speed-features-manifest';
   $whitelist_options['better-speed'][] = 'better-speed-features-rsdlink';
   $whitelist_options['better-speed'][] = 'better-speed-features-shortlink';
+  $whitelist_options['better-speed'][] = 'better-speed-features-rssfeeds';
   return $whitelist_options;
 });
 
@@ -336,6 +358,14 @@ function better_speed_features_shortlink() {
 		$checked = " checked";
 	}
   echo '<label><input id="better-speed-features-shortlink" name="better-speed-settings[better-speed-features-shortlink]" type="checkbox" value="YES"' . $checked . '> Remove the Short Link tag <em>(search engines ignore this tag completely)</em>';
+}
+
+function better_speed_features_rssfeeds() {
+	$checked = "";
+	if(better_speed_check_setting('rssfeeds')) {
+		$checked = " checked";
+	}
+  echo '<label><input id="better-speed-features-rssfeeds" name="better-speed-settings[better-speed-features-rssfeeds]" type="checkbox" value="YES"' . $checked . '> Remove the RSS feed links and disable the feeds <em>(will redirect to the page instead)</em>';
 }
 
 //add actions
