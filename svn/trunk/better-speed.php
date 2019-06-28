@@ -327,9 +327,9 @@ function better_speed_show_settings() {
 	$size = 0;
 	$tags = 0;
 	if(better_speed_check_setting('emojis')) {
-    $reqs += 1;
+    $reqs += 2;
 		$size += 16;
-		$tags += 1;
+		$tags += 2;
 	}
 	if(better_speed_check_setting('embed')) {
     $reqs += 1;
@@ -354,7 +354,7 @@ function better_speed_show_settings() {
 	if(better_speed_check_setting('comments')) {
 		$reqs += 1;
 		$size += 2;
-		$tags += 1;
+		$tags += 2;
 	}
 	if(better_speed_check_setting('generator')) {
 		$tags += 1;
