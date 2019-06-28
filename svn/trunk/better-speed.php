@@ -144,6 +144,79 @@ function better_speed_init() {
 			return $result;
 		}, 20);
 	}
+
+	//Comments
+	if(better_speed_check_setting('comments')) {
+		add_action('widgets_init', function() {
+			unregister_widget('WP_Widget_Recent_Comments');
+	    add_filter('show_recent_comments_widget_style', '__return_false');
+		});
+		add_action('template_redirect', function() {
+			if(is_comment_feed()) {
+     	  wp_die(__('Comments are disabled.', 'better-speed-text'), '', array('response' => 403));
+      }
+		}, 9);
+		add_action('template_redirect', function() {
+			if(is_admin_bar_showing()) {
+				remove_action('admin_bar_menu', 'wp_admin_bar_comments_menu', 60);
+			}
+		});
+		add_action('admin_init', function() {
+			if(is_admin_bar_showing()) {
+				remove_action('admin_bar_menu', 'wp_admin_bar_comments_menu', 60);
+			}
+		});
+		add_action('wp_loaded', function() {
+			$post_types = get_post_types(array('public' => true), 'names');
+			if(!empty($post_types)) {
+				foreach($post_types as $post_type) {
+					if(post_type_supports($post_type, 'comments')) {
+						remove_post_type_support($post_type, 'comments');
+						remove_post_type_support($post_type, 'trackbacks');
+					}
+				}
+			}
+			add_filter('comments_array', function() {
+				return array();
+			}, 20, 2);
+			add_filter('comments_open', function() {
+				return false;
+			}, 20, 2);
+			add_filter('pings_open', function() {
+				return false;
+			}, 20, 2);
+			if(is_admin()) {
+				add_action('admin_menu', function() {
+					global $pagenow;
+					remove_menu_page('edit-comments.php');
+					remove_submenu_page('options-general.php', 'options-discussion.php');
+					if($pagenow == 'comment.php' || $pagenow == 'edit-comments.php') {
+						wp_die(__('Comments are disabled.', 'better-speed-text'), '', array('response' => 403));
+					}
+					if($pagenow == 'options-discussion.php') {
+						wp_die(__('Comments are disabled.', 'better-speed-text'), '', array('response' => 403));
+					}
+				}, 9999);
+				add_action('admin_print_styles-index.php', function() {
+					echo "<style>#dashboard_right_now .comment-count,#dashboard_right_now .comment-mod-count,#latest-comments,#welcome-panel .welcome-comments{display:none !important}</style>";
+        });
+				add_action('admin_print_styles-profile.php', function() {
+					echo "<style>.user-comment-shortcuts-wrap{display:none !important}</style>";
+				});
+				add_action('wp_dashboard_setup', function() {
+					remove_meta_box('dashboard_recent_comments', 'dashboard', 'normal');
+				});
+				add_filter('pre_option_default_pingback_flag', '__return_zero');
+			}
+			else {
+				wp_deregister_script('comment-reply');
+				add_filter('comments_template', function() {
+					return dirname(__FILE__) . '/comments-template.php';
+				}, 20);
+				add_filter('feed_links_show_comments_feed', '__return_false');
+			}
+		});
+	}
 }
 add_action('init', 'better_speed_init');
 
@@ -200,6 +273,7 @@ function better_speed_settings() {
   add_settings_field('better-speed-features-migrate', __('jQuery Migrate', 'better-speed-text'), 'better_speed_features_migrate', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-dashicons', __('Dashicons', 'better-speed-text'), 'better_speed_features_dashicons', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-heartbeat', __('Heartbeat', 'better-speed-text'), 'better_speed_features_heartbeat', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-comments', __('Visitor Comments', 'better-speed-text'), 'better_speed_features_comments', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-xmlrpc', __('XML-RPC + Pingback', 'better-speed-text'), 'better_speed_features_xmlrpc', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-generator', __('Generator', 'better-speed-text'), 'better_speed_features_generator', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-manifest', __('WLW Manifest', 'better-speed-text'), 'better_speed_features_manifest', 'better-speed', 'better-speed-section-features');
@@ -216,6 +290,7 @@ add_filter('whitelist_options', function($whitelist_options) {
   $whitelist_options['better-speed'][] = 'better-speed-features-migrate';
   $whitelist_options['better-speed'][] = 'better-speed-features-dashicons';
   $whitelist_options['better-speed'][] = 'better-speed-features-heartbeat';
+  $whitelist_options['better-speed'][] = 'better-speed-features-comments';
   $whitelist_options['better-speed'][] = 'better-speed-features-generator';
   $whitelist_options['better-speed'][] = 'better-speed-features-xmlrpc';
   $whitelist_options['better-speed'][] = 'better-speed-features-manifest';
@@ -274,6 +349,11 @@ function better_speed_show_settings() {
 	if(better_speed_check_setting('heartbeat')) {
 		$reqs += 1;
 		$size += 6;
+		$tags += 1;
+	}
+	if(better_speed_check_setting('comments')) {
+		$reqs += 1;
+		$size += 2;
 		$tags += 1;
 	}
 	if(better_speed_check_setting('generator')) {
@@ -374,6 +454,14 @@ function better_speed_features_heartbeat() {
 		$checked = " checked";
 	}
   echo '<label><input id="better-speed-features-heartbeat" name="better-speed-settings[better-speed-features-heartbeat]" type="checkbox" value="YES"' . $checked . '> Remove support for auto-save <u>when not editing a page/post</u> <em>(saves 1 file request and ~6kb)</em>';
+}
+
+function better_speed_features_comments() {
+	$checked = "";
+	if(better_speed_check_setting('comments')) {
+		$checked = " checked";
+	}
+  echo '<label><input id="better-speed-features-comments" name="better-speed-settings[better-speed-features-comments]" type="checkbox" value="YES"' . $checked . '> Remove support for leaving comments on posts</u> <em>(saves at least 1 file request and ~2kb)</em>';
 }
 
 function better_speed_features_xmlrpc() {
