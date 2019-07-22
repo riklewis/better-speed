@@ -2,7 +2,7 @@
 /*
 Plugin Name:  Better Speed
 Description:  Improve the loading speed of your website by removing bloat and unused features
-Version:      1.0
+Version:      1.1
 Author:       Better Security
 Author URI:   https://bettersecurity.co
 License:      GPL3
@@ -313,8 +313,8 @@ function better_speed_show_settings() {
   echo '    <a href="https://www.php.net/supported-versions.php" target="_blank"><img src="' . better_speed_badge_php() . '"></a>';
   echo '  </div>';
   echo '  <h1>' . __('Better Speed', 'better-speed-text') . '</h1>';
-	echo '  <p>This plugin will allow you to easily remove bloat and turn off unused features, in order to streamline your website and reduce file requests.';
-	echo '  <p>This plugin is NOT a caching plugin, but should play well with any caching plugin you decide to use.';
+	echo '  <p>' . __('This plugin will allow you to easily remove bloat and turn off unused features, in order to streamline your website and reduce file requests.', 'better-speed-text');
+	echo '  <p>' . __('This plugin is NOT a caching plugin, but should play well with any caching plugin you decide to use', 'better-speed-text');
 	echo '  <br><br>';
 	echo '  <form action="options.php" method="post">';
 	settings_fields('better-speed');
@@ -377,20 +377,20 @@ function better_speed_show_settings() {
 	if(better_speed_check_setting('restapi')) {
 		$tags += 1;
 	}
-	echo '  <h2>Estimated Savings</h2>';
+	echo '  <h2>' . __('Estimated Savings', 'better-speed-text') . '</h2>';
   echo '  <hr>';
   echo '  <table class="form-table">';
   echo '    <tbody>';
 	echo '      <tr>';
-	echo '        <th scope="row">File Requests</th>';
+	echo '        <th scope="row">' . __('File Requests', 'better-speed-text') . '</th>';
 	echo '        <td>' . $reqs . '</td>';
 	echo '      </tr>';
 	echo '      <tr>';
-	echo '        <th scope="row">File Size</th>';
+	echo '        <th scope="row">' . __('File Size', 'better-speed-text') . '</th>';
 	echo '        <td>' . ($size>=1024 ? (number_format($size/1024,1)) . 'Mb' : $size . 'kb') . '</td>';
 	echo '      </tr>';
 	echo '      <tr>';
-	echo '        <th scope="row">HTML Tags</th>';
+	echo '        <th scope="row">' . __('HTML Tags', 'better-speed-text') . '</th>';
 	echo '        <td>' . $tags . '</td>';
 	echo '      </tr>';
 	echo '    </tbody>';
@@ -421,7 +421,7 @@ function better_speed_features_emojis() {
 	if(better_speed_check_setting('emojis')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-emojis" name="better-speed-settings[better-speed-features-emojis]" type="checkbox" value="YES"' . $checked . '> Remove support for emojis in posts <em>(saves at least 1 file request and ~16kb)</em>';
+  echo '<label><input id="better-speed-features-emojis" name="better-speed-settings[better-speed-features-emojis]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for emojis in posts <em>(saves at least 1 file request and ~16kb)</em>', 'better-speed-text');
 }
 
 function better_speed_features_embed() {
@@ -429,7 +429,7 @@ function better_speed_features_embed() {
 	if(better_speed_check_setting('embed')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-embed" name="better-speed-settings[better-speed-features-embed]" type="checkbox" value="YES"' . $checked . '> Remove support for embedding objects in posts <em>(saves at least 1 file request and ~6kb)</em>';
+  echo '<label><input id="better-speed-features-embed" name="better-speed-settings[better-speed-features-embed]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for embedding objects in posts <em>(saves at least 1 file request and ~6kb)</em>', 'better-speed-text');
 }
 
 function better_speed_features_migrate() {
@@ -437,7 +437,7 @@ function better_speed_features_migrate() {
 	if(better_speed_check_setting('migrate')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-migrate" name="better-speed-settings[better-speed-features-migrate]" type="checkbox" value="YES"' . $checked . '> Remove support for old jQuery features dropped in 2016 <em>(saves 1 file request and ~10kb)</em>';
+  echo '<label><input id="better-speed-features-migrate" name="better-speed-settings[better-speed-features-migrate]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for old jQuery features dropped in 2016 <em>(saves 1 file request and ~10kb)</em>', 'better-speed-text');
 }
 
 function better_speed_features_dashicons() {
@@ -445,7 +445,7 @@ function better_speed_features_dashicons() {
 	if(better_speed_check_setting('dashicons')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-dashicons" name="better-speed-settings[better-speed-features-dashicons]" type="checkbox" value="YES"' . $checked . '> Remove support for Dashicons <u>when not logged in</u> <em>(saves 1 file request and ~46kb)</em>';
+  echo '<label><input id="better-speed-features-dashicons" name="better-speed-settings[better-speed-features-dashicons]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for Dashicons <u>when not logged in</u> <em>(saves 1 file request and ~46kb)</em>', 'better-speed-text');
 }
 
 function better_speed_features_heartbeat() {
@@ -453,7 +453,7 @@ function better_speed_features_heartbeat() {
 	if(better_speed_check_setting('heartbeat')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-heartbeat" name="better-speed-settings[better-speed-features-heartbeat]" type="checkbox" value="YES"' . $checked . '> Remove support for auto-save <u>when not editing a page/post</u> <em>(saves 1 file request and ~6kb)</em>';
+  echo '<label><input id="better-speed-features-heartbeat" name="better-speed-settings[better-speed-features-heartbeat]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for auto-save <u>when not editing a page/post</u> <em>(saves 1 file request and ~6kb)</em>', 'better-speed-text');
 }
 
 function better_speed_features_comments() {
@@ -461,7 +461,7 @@ function better_speed_features_comments() {
 	if(better_speed_check_setting('comments')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-comments" name="better-speed-settings[better-speed-features-comments]" type="checkbox" value="YES"' . $checked . '> Remove support for leaving comments on posts</u> <em>(saves at least 1 file request and ~2kb)</em>';
+  echo '<label><input id="better-speed-features-comments" name="better-speed-settings[better-speed-features-comments]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for leaving comments on posts</u> <em>(saves at least 1 file request and ~2kb)</em>', 'better-speed-text');
 }
 
 function better_speed_features_xmlrpc() {
@@ -469,7 +469,7 @@ function better_speed_features_xmlrpc() {
 	if(better_speed_check_setting('xmlrpc')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-xmlrpc" name="better-speed-settings[better-speed-features-xmlrpc]" type="checkbox" value="YES"' . $checked . '> Remove support for third-party application access <em>(such as mobile apps)</em>';
+  echo '<label><input id="better-speed-features-xmlrpc" name="better-speed-settings[better-speed-features-xmlrpc]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for third-party application access <em>(such as mobile apps)</em>', 'better-speed-text');
 }
 
 function better_speed_features_generator() {
@@ -477,7 +477,7 @@ function better_speed_features_generator() {
 	if(better_speed_check_setting('generator')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-generator" name="better-speed-settings[better-speed-features-generator]" type="checkbox" value="YES"' . $checked . '> Remove the generator tag <em>(includes Wordpress version number)</em>';
+  echo '<label><input id="better-speed-features-generator" name="better-speed-settings[better-speed-features-generator]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the generator tag <em>(includes Wordpress version number)</em>', 'better-speed-text');
 }
 
 function better_speed_features_manifest() {
@@ -485,7 +485,7 @@ function better_speed_features_manifest() {
 	if(better_speed_check_setting('manifest')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-manifest" name="better-speed-settings[better-speed-features-manifest]" type="checkbox" value="YES"' . $checked . '> Remove the Windows Live Writer manifest tag <em>(WLW was discontinued in Jan 2017)</em>';
+  echo '<label><input id="better-speed-features-manifest" name="better-speed-settings[better-speed-features-manifest]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the Windows Live Writer manifest tag <em>(WLW was discontinued in Jan 2017)</em>', 'better-speed-text');
 }
 
 function better_speed_features_rsdlink() {
@@ -493,7 +493,7 @@ function better_speed_features_rsdlink() {
 	if(better_speed_check_setting('rsdlink')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-rsdlink" name="better-speed-settings[better-speed-features-rsdlink]" type="checkbox" value="YES"' . $checked . '> Remove the Really Simple Discovery (RSD) tag <em>(this protocol never became popular)</em>';
+  echo '<label><input id="better-speed-features-rsdlink" name="better-speed-settings[better-speed-features-rsdlink]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the Really Simple Discovery (RSD) tag <em>(this protocol never became popular)</em>', 'better-speed-text');
 }
 
 function better_speed_features_shortlink() {
@@ -501,7 +501,7 @@ function better_speed_features_shortlink() {
 	if(better_speed_check_setting('shortlink')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-shortlink" name="better-speed-settings[better-speed-features-shortlink]" type="checkbox" value="YES"' . $checked . '> Remove the Short Link tag <em>(search engines ignore this tag completely)</em>';
+  echo '<label><input id="better-speed-features-shortlink" name="better-speed-settings[better-speed-features-shortlink]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the Short Link tag <em>(search engines ignore this tag completely)</em>', 'better-speed-text');
 }
 
 function better_speed_features_rssfeeds() {
@@ -509,7 +509,7 @@ function better_speed_features_rssfeeds() {
 	if(better_speed_check_setting('rssfeeds')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-rssfeeds" name="better-speed-settings[better-speed-features-rssfeeds]" type="checkbox" value="YES"' . $checked . '> Remove the RSS feed links and disable the feeds <em>(will redirect to the page instead)</em>';
+  echo '<label><input id="better-speed-features-rssfeeds" name="better-speed-settings[better-speed-features-rssfeeds]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the RSS feed links and disable the feeds <em>(will redirect to the page instead)</em>', 'better-speed-text');
 }
 
 function better_speed_features_restapi() {
@@ -517,7 +517,7 @@ function better_speed_features_restapi() {
 	if(better_speed_check_setting('restapi')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-restapi" name="better-speed-settings[better-speed-features-restapi]" type="checkbox" value="YES"' . $checked . '> Remove the REST API links and disable the endpoints <u>when not on admin pages</u>';
+  echo '<label><input id="better-speed-features-restapi" name="better-speed-settings[better-speed-features-restapi]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the REST API links and disable the endpoints <u>when not on admin pages</u>', 'better-speed-text');
 }
 
 //add actions
@@ -532,7 +532,7 @@ if(is_admin()) {
 
 //show settings link
 function better_speed_links($links) {
-	$links[] = sprintf('<a href="%s">%s</a>',admin_url('options-general.php?page=better-speed-settings'),'Settings');
+	$links[] = sprintf('<a href="%s">%s</a>',admin_url('options-general.php?page=better-speed-settings'), __('Settings', 'better-speed-text'));
 	return $links;
 }
 
