@@ -333,6 +333,7 @@ add_filter('whitelist_options', function($whitelist_options) {
 
 //define output for settings page
 function better_speed_show_settings() {
+  echo '<style>#better-speed-tabs h2{display:none}</style>';
   echo '<div class="wrap">';
   echo '  <div style="padding:12px;background-color:white;margin:24px 0;">';
   echo '    <a href="https://bettersecurity.co" target="_blank" style="display:inline-block;width:100%;">';
@@ -455,7 +456,7 @@ function better_speed_badge_php() {
 
 //define output for settings section
 function better_speed_section_features() {
-  echo '<hr>';
+  //nothing to output
 }
 
 //defined output for settings
@@ -564,7 +565,6 @@ function better_speed_features_restapi() {
 }
 //define output for settings section
 function better_speed_section_instant() {
-  echo '<hr>';
   echo '<p><a href="https://instant.page"><img src="' . plugins_url('instant.page.png', __FILE__) . '"></a></p>';
   echo '<p><a href="https://instant.page"><strong>instant.page</strong></a> ' . __('is a free and open source library that uses just-in-time preloading, meaning it preloads a page right before a user clicks on it. Pages are preloaded only when there\'s a good chance that a user will visit them, and only the HTML is preloaded, being respectful of your users\' and servers\' bandwidth and CPU. It uses passive event listeners so that your pages stay smooth and doesn\'t preload when the user has data saver enabled. It\'s less than 1kb and loads after everything else.', 'better-speed-text') . '</p>';
 }
