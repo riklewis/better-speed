@@ -43,8 +43,8 @@ function better_speed_init() {
 
 	//Emojis
 	if(better_speed_check_setting('emojis')) {
-		remove_action('wp_head', 'print_emoji_detection_script', 7);
-		remove_action('admin_print_scripts', 'print_emoji_detection_script');
+		remove_action('wp_head', 'print_emoji_speed_script', 7);
+		remove_action('admin_print_scripts', 'print_emoji_speed_script');
 		remove_action('wp_print_styles', 'print_emoji_styles');
 		remove_action('admin_print_styles', 'print_emoji_styles');
 		remove_filter('the_content_feed', 'wp_staticize_emoji');
@@ -318,7 +318,20 @@ function better_speed_show_settings() {
 	echo '  <br><br>';
 	echo '  <form action="options.php" method="post">';
 	settings_fields('better-speed');
+
+  echo '  <div id="better-speed-tabs">';
+  echo '    <ul>';
+  echo '      <li><a href="#better-speed-tabs-disable">' . __('Disable Features', 'better-detect-text') . '</a></li>';
+  echo '      <li><a href="#better-speed-tabs-instant">' . __('Instant Page', 'better-detect-text') . '</a></li>';
+  echo '    </ul>';
+  echo '    <div id="better-speed-tabs-disable">';
   do_settings_sections('better-speed');
+  echo '    </div>';
+  echo '    <div id="better-speed-tabs-instant">';
+  //do_settings_sections('better-speed-ip');
+  echo '    </div>';
+  echo '  </div>';
+
 	submit_button();
   echo '  </form>';
 
@@ -525,6 +538,18 @@ if(is_admin()) {
   add_action('admin_menu','better_speed_menus');
   add_action('admin_init','better_speed_settings');
 }
+
+function better_speed_admin_scripts() {
+	if($_GET["page"]==="better-speed-settings") {
+	  wp_enqueue_script('jquery-ui-core');
+	  wp_enqueue_script('jquery-ui-tabs');
+
+		wp_enqueue_script('better-speed-main-js', plugins_url('main.js', __FILE__),array('jquery','jquery-ui-tabs'),false,true);
+
+		wp_enqueue_style('jquery-ui-tabs-min-css', plugins_url('jquery-ui-tabs.min.css', __FILE__));
+	}
+}
+add_action('admin_enqueue_scripts', 'better_speed_admin_scripts');
 
 /*
 --------------------- Add links to plugins page ---------------------
