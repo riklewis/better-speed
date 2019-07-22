@@ -145,6 +145,13 @@ function better_speed_init() {
 		}, 20);
 	}
 
+  //Block Library
+	if(better_speed_check_setting('blocks')) {
+    add_action('wp_print_styles', function() {
+      wp_dequeue_style('wp-block-library');
+    }, 100);
+	}
+
 	//Comments
 	if(better_speed_check_setting('comments')) {
 		add_action('widgets_init', function() {
@@ -307,6 +314,7 @@ function better_speed_settings() {
   add_settings_field('better-speed-features-shortlink', __('Short Link', 'better-speed-text'), 'better_speed_features_shortlink', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-rssfeeds', __('RSS Feeds', 'better-speed-text'), 'better_speed_features_rssfeeds', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-restapi', __('REST API', 'better-speed-text'), 'better_speed_features_restapi', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-blocks', __('Block Library', 'better-speed-text'), 'better_speed_features_blocks', 'better-speed', 'better-speed-section-features');
 
   add_settings_section('better-speed-section-instant', __('Instant Page', 'better-speed-text'), 'better_speed_section_instant', 'better-speed-instant');
   add_settings_field('better-speed-instant-page', __('Instant Page', 'better-speed-text'), 'better_speed_instant_page', 'better-speed-instant', 'better-speed-section-instant');
@@ -327,6 +335,7 @@ add_filter('whitelist_options', function($whitelist_options) {
   $whitelist_options['better-speed'][] = 'better-speed-features-shortlink';
   $whitelist_options['better-speed'][] = 'better-speed-features-rssfeeds';
   $whitelist_options['better-speed'][] = 'better-speed-features-restapi';
+  $whitelist_options['better-speed'][] = 'better-speed-features-blocks';
   $whitelist_options['better-speed'][] = 'better-speed-instant-page';
   return $whitelist_options;
 });
@@ -419,6 +428,11 @@ function better_speed_show_settings() {
 		$tags += 2;
 	}
 	if(better_speed_check_setting('restapi')) {
+		$tags += 1;
+	}
+  if(better_speed_check_setting('blocks')) {
+		$reqs += 1;
+		$size += 29;
 		$tags += 1;
 	}
 	echo '  <h2>' . __('Estimated Savings', 'better-speed-text') . '</h2>';
@@ -563,6 +577,15 @@ function better_speed_features_restapi() {
 	}
   echo '<label><input id="better-speed-features-restapi" name="better-speed-settings[better-speed-features-restapi]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the REST API links and disable the endpoints <u>when not on admin pages</u>', 'better-speed-text');
 }
+
+function better_speed_features_blocks() {
+	$checked = "";
+	if(better_speed_check_setting('blocks')) {
+		$checked = " checked";
+	}
+  echo '<label><input id="better-speed-features-blocks" name="better-speed-settings[better-speed-features-blocks]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the Gutenberg blocks library if you are using Classic Editor <em>(saves 1 file request and ~29kb)</em>', 'better-speed-text');
+}
+
 //define output for settings section
 function better_speed_section_instant() {
   echo '<p><a href="https://instant.page"><img src="' . plugins_url('instant.page.png', __FILE__) . '"></a></p>';
