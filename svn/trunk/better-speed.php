@@ -43,8 +43,8 @@ function better_speed_init() {
 
 	//Emojis
 	if(better_speed_check_setting('emojis')) {
-		remove_action('wp_head', 'print_emoji_speed_script', 7);
-		remove_action('admin_print_scripts', 'print_emoji_speed_script');
+		remove_action('wp_head', 'print_emoji_detection_script', 7);
+		remove_action('admin_print_scripts', 'print_emoji_detection_script');
 		remove_action('wp_print_styles', 'print_emoji_styles');
 		remove_action('admin_print_styles', 'print_emoji_styles');
 		remove_filter('the_content_feed', 'wp_staticize_emoji');
