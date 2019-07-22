@@ -575,7 +575,7 @@ function better_speed_instant_page() {
 	if(better_speed_check_other_setting('instant-page')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-instant-page" name="better-speed-settings[better-speed-instant-page]" type="checkbox" value="YES"' . $checked . '> ' . __('Enable <strong>instant.page</strong> functionality <u>when Data Saver mode is not enabled</u>', 'better-speed-text');
+  echo '<label><input id="better-speed-instant-page" name="better-speed-settings[better-speed-instant-page]" type="checkbox" value="YES"' . $checked . '> ' . __('Enable <strong>instant.page</strong> functionality', 'better-speed-text');
 }
 
 
