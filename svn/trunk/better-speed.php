@@ -249,6 +249,26 @@ function better_speed_wp_enqueue_scripts() {
 add_action('wp_enqueue_scripts', 'better_speed_wp_enqueue_scripts');
 
 /*
+--------------------------- Instant Page ----------------------------
+*/
+
+function better_speed_enqueue_instant_page() {
+  if(better_speed_check_other_setting('instant-page')) {
+    wp_enqueue_script('better-speed-instant-page', plugins_url('instant.page.min.js', __FILE__), array(), false, true);
+  }
+}
+add_action('wp_enqueue_scripts', 'better_speed_enqueue_instant_page');
+
+function better_speed_defer_scripts($tag, $handle, $src) {
+	$tag = str_replace(' type="text/javascript"','',str_replace(" type='text/javascript'",'',$tag));
+  if($handle==='better-speed-instant-page') {
+    return str_replace('<script', '<script defer', $tag);
+  }
+  return $tag;
+}
+add_filter('script_loader_tag', 'better_speed_defer_scripts', 10, 3);
+
+/*
 ----------------------------- Settings ------------------------------
 */
 
@@ -256,6 +276,12 @@ add_action('wp_enqueue_scripts', 'better_speed_wp_enqueue_scripts');
 function better_speed_check_setting($suffix) {
 	$settings = get_option('better-speed-settings');
   return (isset($settings['better-speed-features-' . $suffix]) && $settings['better-speed-features-' . $suffix]==="YES");
+}
+
+//check checkbox setting
+function better_speed_check_other_setting($suffix) {
+	$settings = get_option('better-speed-settings');
+  return (isset($settings['better-speed-' . $suffix]) && $settings['better-speed-' . $suffix]==="YES");
 }
 
 //add settings page
@@ -281,6 +307,9 @@ function better_speed_settings() {
   add_settings_field('better-speed-features-shortlink', __('Short Link', 'better-speed-text'), 'better_speed_features_shortlink', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-rssfeeds', __('RSS Feeds', 'better-speed-text'), 'better_speed_features_rssfeeds', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-restapi', __('REST API', 'better-speed-text'), 'better_speed_features_restapi', 'better-speed', 'better-speed-section-features');
+
+  add_settings_section('better-speed-section-instant', __('Instant Page', 'better-speed-text'), 'better_speed_section_instant', 'better-speed-instant');
+  add_settings_field('better-speed-instant-page', __('Instant Page', 'better-speed-text'), 'better_speed_instant_page', 'better-speed-instant', 'better-speed-section-instant');
 }
 
 //allow the settings to be stored
@@ -298,6 +327,7 @@ add_filter('whitelist_options', function($whitelist_options) {
   $whitelist_options['better-speed'][] = 'better-speed-features-shortlink';
   $whitelist_options['better-speed'][] = 'better-speed-features-rssfeeds';
   $whitelist_options['better-speed'][] = 'better-speed-features-restapi';
+  $whitelist_options['better-speed'][] = 'better-speed-instant-page';
   return $whitelist_options;
 });
 
@@ -328,7 +358,7 @@ function better_speed_show_settings() {
   do_settings_sections('better-speed');
   echo '    </div>';
   echo '    <div id="better-speed-tabs-instant">';
-  //do_settings_sections('better-speed-ip');
+  do_settings_sections('better-speed-instant');
   echo '    </div>';
   echo '  </div>';
 
@@ -532,6 +562,22 @@ function better_speed_features_restapi() {
 	}
   echo '<label><input id="better-speed-features-restapi" name="better-speed-settings[better-speed-features-restapi]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the REST API links and disable the endpoints <u>when not on admin pages</u>', 'better-speed-text');
 }
+//define output for settings section
+function better_speed_section_instant() {
+  echo '<hr>';
+  echo '<p><a href="https://instant.page"><img src="' . plugins_url('instant.page.png', __FILE__) . '"></a></p>';
+  echo '<p><a href="https://instant.page"><strong>instant.page</strong></a> ' . __('is a free and open source library that uses just-in-time preloading, meaning it preloads a page right before a user clicks on it. Pages are preloaded only when there\'s a good chance that a user will visit them, and only the HTML is preloaded, being respectful of your users\' and servers\' bandwidth and CPU. It uses passive event listeners so that your pages stay smooth and doesn\'t preload when the user has data saver enabled. It\'s less than 1kb and loads after everything else.', 'better-speed-text') . '</p>';
+}
+
+//defined output for settings
+function better_speed_instant_page() {
+	$checked = "";
+	if(better_speed_check_other_setting('instant-page')) {
+		$checked = " checked";
+	}
+  echo '<label><input id="better-speed-instant-page" name="better-speed-settings[better-speed-instant-page]" type="checkbox" value="YES"' . $checked . '> ' . __('Enable <strong>instant.page</strong> functionality <u>when Data Saver mode is not enabled</u>', 'better-speed-text');
+}
+
 
 //add actions
 if(is_admin()) {
