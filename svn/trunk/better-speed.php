@@ -2,7 +2,7 @@
 /*
 Plugin Name:  Better Speed
 Description:  Improve the loading speed of your website by removing bloat and unused features
-Version:      1.1
+Version:      1.2
 Author:       Better Security
 Author URI:   https://bettersecurity.co
 License:      GPL3
@@ -610,7 +610,7 @@ if(is_admin()) {
 }
 
 function better_speed_admin_scripts() {
-	if($_GET["page"]==="better-speed-settings") {
+	if(isset($_GET["page"]) && $_GET["page"]==="better-speed-settings") {
 	  wp_enqueue_script('jquery-ui-core');
 	  wp_enqueue_script('jquery-ui-tabs');
 
