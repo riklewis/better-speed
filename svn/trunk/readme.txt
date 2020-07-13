@@ -1,6 +1,6 @@
 === Better Speed ===
 Contributors: bettersecurity, whysoslow, riklewis
-Tags: better, security, speed, performance, bloat
+Tags: better, security, speed, performance, bloat, slow, whysoslow, instant
 Requires at least: 3.5
 Tested up to: 5.4
 Stable tag: trunk
