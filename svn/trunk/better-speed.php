@@ -2,9 +2,9 @@
 /*
 Plugin Name:  Better Speed
 Description:  Improve the loading speed of your website by removing bloat and unused features
-Version:      1.2
-Author:       Better Security
-Author URI:   https://bettersecurity.co
+Version:      2.0
+Author:       Why So Slow?
+Author URI:   https://whysoslow.co.uk
 License:      GPL3
 License URI:  https://www.gnu.org/licenses/gpl-3.0.en.html
 Text Domain:  better-speed-text
@@ -357,7 +357,7 @@ function better_speed_show_settings() {
   echo '<style>#better-speed-tabs h2{display:none}</style>';
   echo '<div class="wrap">';
   echo '  <div style="padding:12px;background-color:white;margin:24px 0;">';
-  echo '    <a href="https://bettersecurity.co" target="_blank" style="display:inline-block;width:100%;">';
+  echo '    <a href="https://whysoslow.co.uk" target="_blank" style="display:inline-block;width:100%;">';
   echo '      <img src="' . plugins_url('header.png', __FILE__) . '" style="height:64px;">';
   echo '    </a>';
   echo '  </div>';
