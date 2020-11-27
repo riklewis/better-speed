@@ -477,10 +477,10 @@ function better_speed_show_settings() {
 function better_speed_badge_php() {
   $ver = better_speed_phpversion();
   $col = "critical";
-  if(version_compare($ver,'7.2','>=')) {
+  if(version_compare($ver,'7.3','>=')) {
     $col = "important";
   }
-  if(version_compare($ver,'7.3','>=')) {
+  if(version_compare($ver,'7.4','>=')) {
     $col = "success";
   }
   return 'https://img.shields.io/badge/PHP-' . $ver . '-' . $col . '.svg?logo=php&style=for-the-badge';
