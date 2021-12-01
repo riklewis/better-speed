@@ -1,14 +1,14 @@
-=== Better Speed ===
-Contributors: bettersecurity, whysoslow, riklewis
+=== Why So Slow? ===
+Contributors: whysoslow, bettersecurity, riklewis
 Tags: better, security, speed, performance, bloat, slow, whysoslow, instant
 Requires at least: 4.0
-Tested up to: 5.6
+Tested up to: 5.8
 Stable tag: trunk
 Requires PHP: 7.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-Improve the loading speed of your website by removing bloat and unused features
+Improve the loading speed of your website by removing bloat and unused features (formerly named Better Speed)
 
 == Description ==
 

@@ -1,13 +1,13 @@
 <?php
 /*
-Plugin Name:  Better Speed
-Description:  Improve the loading speed of your website by removing bloat and unused features
+Plugin Name:  Why So Slow?
+Description:  Improve the loading speed of your website by removing bloat and unused features <em>(formerly named <strong>Better Speed</strong>)</em>
 Version:      2.0
 Author:       Why So Slow?
 Author URI:   https://whysoslow.co.uk
 License:      GPL3
 License URI:  https://www.gnu.org/licenses/gpl-3.0.en.html
-Text Domain:  better-speed-text
+Text Domain:  whysoslow
 Domain Path:  /languages
 */
 
@@ -30,12 +30,44 @@ function better_speed_log($message) {
 -------------------------- Server Timings --------------------------
 */
 
+function better_speed_timing_desc($type,$name,$diff) {
+	if($name) {
+		$name = str_replace(' ','_',$name);
+	  return $name . ';dur=' . $diff*1000 . ';desc=' . $type . '_' . $name;
+	}
+  return $type . ';dur=' . $diff*1000 . ';desc=' . $type;
+}
+
+function better_speed_plugin_loaded($plugin) {
+	if(better_speed_check_other_setting('others-timings')) {
+		$timestamp = get_option('better_speed_plugin_loaded');
+		$timediff = ($timestamp ? microtime(true) - $timestamp : false);
+		update_option('better_speed_plugin_loaded',microtime(true));
+		add_action('after_setup_theme', 'better_speed_after_setup_theme', 0);
+		add_action('shutdown', 'better_speed_shutdown', 0);
+	}
+}
+add_action('setup_theme', 'better_speed_setup_theme', 0);
+
+function better_speed_setup_theme() {
+	if(better_speed_check_other_setting('others-timings')) {
+		update_option('better_speed_setup_theme',microtime(true));
+		add_action('after_setup_theme', 'better_speed_after_setup_theme', 0);
+		add_action('shutdown', 'better_speed_shutdown', 0);
+	}
+}
+add_action('setup_theme', 'better_speed_setup_theme', 0);
+
+function better_speed_after_setup_theme() {
+  $timediff = microtime(true) - get_option('better_speed_setup_theme');
+  @header('Server-Timing: ' . better_speed_timing_desc('Theme',get_stylesheet(),$timediff), false);
+}
+
 function better_speed_shutdown() {
   global $timestart;
   $timediff = microtime(true) - $timestart;
-  @header('Server-Timing: Wordpress;dur=' . $timediff*1000);
+  @header('Server-Timing: ' . better_speed_timing_desc('WordPress',false,$timediff), false);
 }
-add_action('shutdown', 'better_speed_shutdown', 0);
 
 /*
 -------------------------- Remove Features --------------------------
@@ -151,7 +183,7 @@ function better_speed_init() {
 		remove_action('template_redirect', 'rest_output_link_header', 11, 0);
     add_filter('rest_authentication_errors', function($result) {
 			if(empty($result) && !is_admin()) {
-				return new WP_Error('rest_authentication_error', __('Forbidden', 'better-speed-text'), array('status' => 403));
+				return new WP_Error('rest_authentication_error', __('Forbidden', 'whysoslow'), array('status' => 403));
 			}
 			return $result;
 		}, 20);
@@ -172,7 +204,7 @@ function better_speed_init() {
 		});
 		add_action('template_redirect', function() {
 			if(is_comment_feed()) {
-     	  wp_die(__('Comments are disabled.', 'better-speed-text'), '', array('response' => 403));
+     	  wp_die(__('Comments are disabled.', 'whysoslow'), '', array('response' => 403));
       }
 		}, 9);
 		add_action('template_redirect', function() {
@@ -210,10 +242,10 @@ function better_speed_init() {
 					remove_menu_page('edit-comments.php');
 					remove_submenu_page('options-general.php', 'options-discussion.php');
 					if($pagenow == 'comment.php' || $pagenow == 'edit-comments.php') {
-						wp_die(__('Comments are disabled.', 'better-speed-text'), '', array('response' => 403));
+						wp_die(__('Comments are disabled.', 'whysoslow'), '', array('response' => 403));
 					}
 					if($pagenow == 'options-discussion.php') {
-						wp_die(__('Comments are disabled.', 'better-speed-text'), '', array('response' => 403));
+						wp_die(__('Comments are disabled.', 'whysoslow'), '', array('response' => 403));
 					}
 				}, 9999);
 				add_action('admin_print_styles-index.php', function() {
@@ -287,6 +319,20 @@ function better_speed_defer_scripts($tag, $handle, $src) {
 }
 add_filter('script_loader_tag', 'better_speed_defer_scripts', 10, 3);
 
+function better_speed_body_class( $classes ) {
+	if(better_speed_check_other_setting('instant-page')) {
+    $value = better_speed_get_other_setting('instant-intensity') ?: 'default';
+		if($value!=='default') {
+			echo ' data-instant-intensity="' . $value . '" ';
+		}
+		if(better_speed_check_other_setting('instant-external')) {
+			echo ' data-instant-allow-external-links ';
+		}
+	}
+  return $classes;
+}
+add_filter( 'body_class', 'better_speed_body_class' );
+
 /*
 ----------------------------- Settings ------------------------------
 */
@@ -303,33 +349,44 @@ function better_speed_check_other_setting($suffix) {
   return (isset($settings['better-speed-' . $suffix]) && $settings['better-speed-' . $suffix]==="YES");
 }
 
+//check checkbox setting
+function better_speed_get_other_setting($suffix) {
+	$settings = get_option('better-speed-settings');
+  return (isset($settings['better-speed-' . $suffix]) ? $settings['better-speed-' . $suffix] : "");
+}
+
 //add settings page
 function better_speed_menus() {
-	add_options_page(__('Better Speed','better-speed-text'), __('Better Speed','better-speed-text'), 'manage_options', 'better-speed-settings', 'better_speed_show_settings');
+	add_options_page(__('Why So Slow?','whysoslow'), __('Why So Slow?','whysoslow'), 'manage_options', 'better-speed-settings', 'better_speed_show_settings');
 }
 
 //add the settings
 function better_speed_settings() {
 	register_setting('better-speed','better-speed-settings');
 
-  add_settings_section('better-speed-section-features', __('Disable Features', 'better-speed-text'), 'better_speed_section_features', 'better-speed');
-  add_settings_field('better-speed-features-emojis', __('Emojis', 'better-speed-text'), 'better_speed_features_emojis', 'better-speed', 'better-speed-section-features');
-  add_settings_field('better-speed-features-embed', __('Embed Objects', 'better-speed-text'), 'better_speed_features_embed', 'better-speed', 'better-speed-section-features');
-  add_settings_field('better-speed-features-migrate', __('jQuery Migrate', 'better-speed-text'), 'better_speed_features_migrate', 'better-speed', 'better-speed-section-features');
-  add_settings_field('better-speed-features-dashicons', __('Dashicons', 'better-speed-text'), 'better_speed_features_dashicons', 'better-speed', 'better-speed-section-features');
-  add_settings_field('better-speed-features-heartbeat', __('Heartbeat', 'better-speed-text'), 'better_speed_features_heartbeat', 'better-speed', 'better-speed-section-features');
-  add_settings_field('better-speed-features-comments', __('Visitor Comments', 'better-speed-text'), 'better_speed_features_comments', 'better-speed', 'better-speed-section-features');
-  add_settings_field('better-speed-features-xmlrpc', __('XML-RPC + Pingback', 'better-speed-text'), 'better_speed_features_xmlrpc', 'better-speed', 'better-speed-section-features');
-  add_settings_field('better-speed-features-generator', __('Generator', 'better-speed-text'), 'better_speed_features_generator', 'better-speed', 'better-speed-section-features');
-  add_settings_field('better-speed-features-manifest', __('WLW Manifest', 'better-speed-text'), 'better_speed_features_manifest', 'better-speed', 'better-speed-section-features');
-  add_settings_field('better-speed-features-rsdlink', __('Really Simple Discovery', 'better-speed-text'), 'better_speed_features_rsdlink', 'better-speed', 'better-speed-section-features');
-  add_settings_field('better-speed-features-shortlink', __('Short Link', 'better-speed-text'), 'better_speed_features_shortlink', 'better-speed', 'better-speed-section-features');
-  add_settings_field('better-speed-features-rssfeeds', __('RSS Feeds', 'better-speed-text'), 'better_speed_features_rssfeeds', 'better-speed', 'better-speed-section-features');
-  add_settings_field('better-speed-features-restapi', __('REST API', 'better-speed-text'), 'better_speed_features_restapi', 'better-speed', 'better-speed-section-features');
-  add_settings_field('better-speed-features-blocks', __('Block Library', 'better-speed-text'), 'better_speed_features_blocks', 'better-speed', 'better-speed-section-features');
+  add_settings_section('better-speed-section-features', __('Disable Features', 'whysoslow'), 'better_speed_section_features', 'better-speed');
+  add_settings_field('better-speed-features-emojis', __('Emojis', 'whysoslow'), 'better_speed_features_emojis', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-embed', __('Embed Objects', 'whysoslow'), 'better_speed_features_embed', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-migrate', __('jQuery Migrate', 'whysoslow'), 'better_speed_features_migrate', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-dashicons', __('Dashicons', 'whysoslow'), 'better_speed_features_dashicons', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-heartbeat', __('Heartbeat', 'whysoslow'), 'better_speed_features_heartbeat', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-comments', __('Visitor Comments', 'whysoslow'), 'better_speed_features_comments', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-xmlrpc', __('XML-RPC + Pingback', 'whysoslow'), 'better_speed_features_xmlrpc', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-generator', __('Generator', 'whysoslow'), 'better_speed_features_generator', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-manifest', __('WLW Manifest', 'whysoslow'), 'better_speed_features_manifest', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-rsdlink', __('Really Simple Discovery', 'whysoslow'), 'better_speed_features_rsdlink', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-shortlink', __('Short Link', 'whysoslow'), 'better_speed_features_shortlink', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-rssfeeds', __('RSS Feeds', 'whysoslow'), 'better_speed_features_rssfeeds', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-restapi', __('REST API', 'whysoslow'), 'better_speed_features_restapi', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-blocks', __('Block Library', 'whysoslow'), 'better_speed_features_blocks', 'better-speed', 'better-speed-section-features');
 
-  add_settings_section('better-speed-section-instant', __('Instant Page', 'better-speed-text'), 'better_speed_section_instant', 'better-speed-instant');
-  add_settings_field('better-speed-instant-page', __('Instant Page', 'better-speed-text'), 'better_speed_instant_page', 'better-speed-instant', 'better-speed-section-instant');
+  add_settings_section('better-speed-section-others', __('Settings', 'whysoslow'), 'better_speed_section_others', 'better-speed-others');
+  add_settings_field('better-speed-others-timings', __('Server Timings', 'whysoslow'), 'better_speed_others_timings', 'better-speed-others', 'better-speed-section-others');
+
+  add_settings_section('better-speed-section-instant', __('Instant Page', 'whysoslow'), 'better_speed_section_instant', 'better-speed-instant');
+  add_settings_field('better-speed-instant-page', __('Instant Page', 'whysoslow'), 'better_speed_instant_page', 'better-speed-instant', 'better-speed-section-instant');
+  add_settings_field('better-speed-instant-intensity', __('Preload Intensity', 'whysoslow'), 'better_speed_instant_intensity', 'better-speed-instant', 'better-speed-section-instant');
+  add_settings_field('better-speed-instant-external', __('Preload External Links', 'whysoslow'), 'better_speed_instant_external', 'better-speed-instant', 'better-speed-section-instant');
 }
 
 //allow the settings to be stored
@@ -348,7 +405,10 @@ add_filter('whitelist_options', function($whitelist_options) {
   $whitelist_options['better-speed'][] = 'better-speed-features-rssfeeds';
   $whitelist_options['better-speed'][] = 'better-speed-features-restapi';
   $whitelist_options['better-speed'][] = 'better-speed-features-blocks';
+  $whitelist_options['better-speed'][] = 'better-speed-others-timings';
   $whitelist_options['better-speed'][] = 'better-speed-instant-page';
+  $whitelist_options['better-speed'][] = 'better-speed-instant-intensity';
+  $whitelist_options['better-speed'][] = 'better-speed-instant-external';
   return $whitelist_options;
 });
 
@@ -370,20 +430,24 @@ function better_speed_show_settings() {
     echo ' &nbsp; <a href="https://www.fromdual.com/support-for-mysql-from-oracle" target="_blank"><img src="' . better_speed_badge_maria() . '"></a>';
   }
   echo '  </div>';
-  echo '  <h1>' . __('Better Speed', 'better-speed-text') . '</h1>';
-	echo '  <p>' . __('This plugin will allow you to easily remove bloat and turn off unused features, in order to streamline your website and reduce file requests.', 'better-speed-text');
-	echo '  <p>' . __('This plugin is NOT a caching plugin, but should play well with any caching plugin you decide to use', 'better-speed-text');
+  echo '  <h1>' . __('Why So Slow?', 'whysoslow') . '</h1>';
+	echo '  <p>' . __('This plugin will allow you to easily remove bloat and turn off unused features, in order to streamline your website and reduce file requests.', 'whysoslow');
+	echo '  <p>' . __('This plugin is <em>not</em> a caching plugin, but should play well with any caching plugin you decide to use.', 'whysoslow');
 	echo '  <br><br>';
 	echo '  <form action="options.php" method="post">';
 	settings_fields('better-speed');
 
   echo '  <div id="better-speed-tabs">';
   echo '    <ul>';
-  echo '      <li><a href="#better-speed-tabs-disable">' . __('Disable Features', 'better-detect-text') . '</a></li>';
-  echo '      <li><a href="#better-speed-tabs-instant">' . __('Instant Page', 'better-detect-text') . '</a></li>';
+  echo '      <li><a href="#better-speed-tabs-disable">' . __('Disable Features', 'whysoslow') . '</a></li>';
+	echo '      <li><a href="#better-speed-tabs-others">' . __('Settings', 'whysoslow') . '</a></li>';
+  echo '      <li><a href="#better-speed-tabs-instant">' . __('Instant Page', 'whysoslow') . '</a></li>';
   echo '    </ul>';
   echo '    <div id="better-speed-tabs-disable">';
   do_settings_sections('better-speed');
+  echo '    </div>';
+  echo '    <div id="better-speed-tabs-others">';
+  do_settings_sections('better-speed-others');
   echo '    </div>';
   echo '    <div id="better-speed-tabs-instant">';
   do_settings_sections('better-speed-instant');
@@ -453,20 +517,20 @@ function better_speed_show_settings() {
 		$size += 29;
 		$tags += 1;
 	}
-	echo '  <h2>' . __('Estimated Savings', 'better-speed-text') . '</h2>';
+	echo '  <h2>' . __('Estimated Savings', 'whysoslow') . '</h2>';
   echo '  <hr>';
   echo '  <table class="form-table">';
   echo '    <tbody>';
 	echo '      <tr>';
-	echo '        <th scope="row">' . __('File Requests', 'better-speed-text') . '</th>';
+	echo '        <th scope="row">' . __('File Requests', 'whysoslow') . '</th>';
 	echo '        <td>' . $reqs . '</td>';
 	echo '      </tr>';
 	echo '      <tr>';
-	echo '        <th scope="row">' . __('File Size', 'better-speed-text') . '</th>';
+	echo '        <th scope="row">' . __('File Size', 'whysoslow') . '</th>';
 	echo '        <td>' . ($size>=1024 ? (number_format($size/1024,1)) . 'Mb' : $size . 'kb') . '</td>';
 	echo '      </tr>';
 	echo '      <tr>';
-	echo '        <th scope="row">' . __('HTML Tags', 'better-speed-text') . '</th>';
+	echo '        <th scope="row">' . __('HTML Tags', 'whysoslow') . '</th>';
 	echo '        <td>' . $tags . '</td>';
 	echo '      </tr>';
 	echo '    </tbody>';
@@ -540,7 +604,7 @@ function better_speed_features_emojis() {
 	if(better_speed_check_setting('emojis')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-emojis" name="better-speed-settings[better-speed-features-emojis]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for emojis in posts <em>(saves at least 1 file request and ~16kb)</em>', 'better-speed-text');
+  echo '<label><input id="better-speed-features-emojis" name="better-speed-settings[better-speed-features-emojis]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for emojis in posts <em>(saves at least 1 file request and ~16kb)</em>', 'whysoslow');
 }
 
 function better_speed_features_embed() {
@@ -548,7 +612,7 @@ function better_speed_features_embed() {
 	if(better_speed_check_setting('embed')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-embed" name="better-speed-settings[better-speed-features-embed]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for embedding objects in posts <em>(saves at least 1 file request and ~6kb)</em>', 'better-speed-text');
+  echo '<label><input id="better-speed-features-embed" name="better-speed-settings[better-speed-features-embed]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for embedding objects in posts <em>(saves at least 1 file request and ~6kb)</em>', 'whysoslow');
 }
 
 function better_speed_features_migrate() {
@@ -556,7 +620,7 @@ function better_speed_features_migrate() {
 	if(better_speed_check_setting('migrate')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-migrate" name="better-speed-settings[better-speed-features-migrate]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for old jQuery features dropped in 2016 <em>(saves 1 file request and ~10kb)</em>', 'better-speed-text');
+  echo '<label><input id="better-speed-features-migrate" name="better-speed-settings[better-speed-features-migrate]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for old jQuery features dropped in 2016 <em>(saves 1 file request and ~10kb)</em>', 'whysoslow');
 }
 
 function better_speed_features_dashicons() {
@@ -564,7 +628,7 @@ function better_speed_features_dashicons() {
 	if(better_speed_check_setting('dashicons')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-dashicons" name="better-speed-settings[better-speed-features-dashicons]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for Dashicons <u>when not logged in</u> <em>(saves 1 file request and ~46kb)</em>', 'better-speed-text');
+  echo '<label><input id="better-speed-features-dashicons" name="better-speed-settings[better-speed-features-dashicons]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for Dashicons <u>when not logged in</u> <em>(saves 1 file request and ~46kb)</em>', 'whysoslow');
 }
 
 function better_speed_features_heartbeat() {
@@ -572,7 +636,7 @@ function better_speed_features_heartbeat() {
 	if(better_speed_check_setting('heartbeat')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-heartbeat" name="better-speed-settings[better-speed-features-heartbeat]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for auto-save <u>when not editing a page/post</u> <em>(saves 1 file request and ~6kb)</em>', 'better-speed-text');
+  echo '<label><input id="better-speed-features-heartbeat" name="better-speed-settings[better-speed-features-heartbeat]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for auto-save <u>when not editing a page/post</u> <em>(saves 1 file request and ~6kb)</em>', 'whysoslow');
 }
 
 function better_speed_features_comments() {
@@ -580,7 +644,7 @@ function better_speed_features_comments() {
 	if(better_speed_check_setting('comments')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-comments" name="better-speed-settings[better-speed-features-comments]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for leaving comments on posts</u> <em>(saves at least 1 file request and ~2kb)</em>', 'better-speed-text');
+  echo '<label><input id="better-speed-features-comments" name="better-speed-settings[better-speed-features-comments]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for leaving comments on posts</u> <em>(saves at least 1 file request and ~2kb)</em>', 'whysoslow');
 }
 
 function better_speed_features_xmlrpc() {
@@ -588,7 +652,7 @@ function better_speed_features_xmlrpc() {
 	if(better_speed_check_setting('xmlrpc')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-xmlrpc" name="better-speed-settings[better-speed-features-xmlrpc]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for third-party application access <em>(such as mobile apps)</em>', 'better-speed-text');
+  echo '<label><input id="better-speed-features-xmlrpc" name="better-speed-settings[better-speed-features-xmlrpc]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for third-party application access <em>(such as mobile apps)</em>', 'whysoslow');
 }
 
 function better_speed_features_generator() {
@@ -596,7 +660,7 @@ function better_speed_features_generator() {
 	if(better_speed_check_setting('generator')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-generator" name="better-speed-settings[better-speed-features-generator]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the generator tag <em>(includes Wordpress version number)</em>', 'better-speed-text');
+  echo '<label><input id="better-speed-features-generator" name="better-speed-settings[better-speed-features-generator]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the generator tag <em>(includes Wordpress version number)</em>', 'whysoslow');
 }
 
 function better_speed_features_manifest() {
@@ -604,7 +668,7 @@ function better_speed_features_manifest() {
 	if(better_speed_check_setting('manifest')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-manifest" name="better-speed-settings[better-speed-features-manifest]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the Windows Live Writer manifest tag <em>(WLW was discontinued in Jan 2017)</em>', 'better-speed-text');
+  echo '<label><input id="better-speed-features-manifest" name="better-speed-settings[better-speed-features-manifest]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the Windows Live Writer manifest tag <em>(WLW was discontinued in Jan 2017)</em>', 'whysoslow');
 }
 
 function better_speed_features_rsdlink() {
@@ -612,7 +676,7 @@ function better_speed_features_rsdlink() {
 	if(better_speed_check_setting('rsdlink')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-rsdlink" name="better-speed-settings[better-speed-features-rsdlink]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the Really Simple Discovery (RSD) tag <em>(this protocol never became popular)</em>', 'better-speed-text');
+  echo '<label><input id="better-speed-features-rsdlink" name="better-speed-settings[better-speed-features-rsdlink]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the Really Simple Discovery (RSD) tag <em>(this protocol never became popular)</em>', 'whysoslow');
 }
 
 function better_speed_features_shortlink() {
@@ -620,7 +684,7 @@ function better_speed_features_shortlink() {
 	if(better_speed_check_setting('shortlink')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-shortlink" name="better-speed-settings[better-speed-features-shortlink]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the Short Link tag <em>(search engines ignore this tag completely)</em>', 'better-speed-text');
+  echo '<label><input id="better-speed-features-shortlink" name="better-speed-settings[better-speed-features-shortlink]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the Short Link tag <em>(search engines ignore this tag completely)</em>', 'whysoslow');
 }
 
 function better_speed_features_rssfeeds() {
@@ -628,7 +692,7 @@ function better_speed_features_rssfeeds() {
 	if(better_speed_check_setting('rssfeeds')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-rssfeeds" name="better-speed-settings[better-speed-features-rssfeeds]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the RSS feed links and disable the feeds <em>(will redirect to the page instead)</em>', 'better-speed-text');
+  echo '<label><input id="better-speed-features-rssfeeds" name="better-speed-settings[better-speed-features-rssfeeds]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the RSS feed links and disable the feeds <em>(will redirect to the page instead)</em>', 'whysoslow');
 }
 
 function better_speed_features_restapi() {
@@ -636,7 +700,7 @@ function better_speed_features_restapi() {
 	if(better_speed_check_setting('restapi')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-restapi" name="better-speed-settings[better-speed-features-restapi]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the REST API links and disable the endpoints <u>when not on admin pages</u>', 'better-speed-text');
+  echo '<label><input id="better-speed-features-restapi" name="better-speed-settings[better-speed-features-restapi]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the REST API links and disable the endpoints <u>when not on admin pages</u>', 'whysoslow');
 }
 
 function better_speed_features_blocks() {
@@ -644,13 +708,27 @@ function better_speed_features_blocks() {
 	if(better_speed_check_setting('blocks')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-features-blocks" name="better-speed-settings[better-speed-features-blocks]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the Gutenberg blocks library if you are using Classic Editor <em>(saves 1 file request and ~29kb)</em>', 'better-speed-text');
+  echo '<label><input id="better-speed-features-blocks" name="better-speed-settings[better-speed-features-blocks]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the Gutenberg blocks library if you are using Classic Editor <em>(saves 1 file request and ~29kb)</em>', 'whysoslow');
+}
+
+//define output for settings section
+function better_speed_section_others() {
+	//nothing to output
+}
+
+//defined output for settings
+function better_speed_others_timings() {
+	$checked = "";
+	if(better_speed_check_other_setting('others-timings')) {
+		$checked = " checked";
+	}
+  echo '<label><input id="better-speed-others-timings" name="better-speed-settings[better-speed-others-timings]" type="checkbox" value="YES"' . $checked . '> ' . __('Add <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Server-Timing" target="_blank" rel="noopener">Server Timing</a> headers to aid debugging', 'whysoslow');
 }
 
 //define output for settings section
 function better_speed_section_instant() {
   echo '<p><a href="https://instant.page"><img src="' . plugins_url('instant.page.png', __FILE__) . '"></a></p>';
-  echo '<p><a href="https://instant.page"><strong>instant.page</strong></a> ' . __('is a free and open source library that uses just-in-time preloading, meaning it preloads a page right before a user clicks on it. Pages are preloaded only when there\'s a good chance that a user will visit them, and only the HTML is preloaded, being respectful of your users\' and servers\' bandwidth and CPU. It uses passive event listeners so that your pages stay smooth and doesn\'t preload when the user has data saver enabled. It\'s less than 1kb and loads after everything else.', 'better-speed-text') . '</p>';
+  echo '<p><a href="https://instant.page"><strong>instant.page</strong></a> ' . __('is a free and open source library that uses just-in-time preloading, meaning it preloads a page right before a user clicks on it. Pages are preloaded only when there\'s a good chance that a user will visit them, and only the HTML is preloaded, being respectful of your users\' and servers\' bandwidth and CPU. It uses passive event listeners so that your pages stay smooth and doesn\'t preload when the user has data saver enabled. It\'s less than 1kb and loads after everything else.', 'whysoslow') . '</p>';
 }
 
 //defined output for settings
@@ -659,9 +737,34 @@ function better_speed_instant_page() {
 	if(better_speed_check_other_setting('instant-page')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-instant-page" name="better-speed-settings[better-speed-instant-page]" type="checkbox" value="YES"' . $checked . '> ' . __('Enable <strong>instant.page</strong> functionality', 'better-speed-text');
+  echo '<label><input id="better-speed-instant-page" name="better-speed-settings[better-speed-instant-page]" type="checkbox" value="YES"' . $checked . '> ' . __('Enable <strong>instant.page</strong> functionality', 'whysoslow');
 }
 
+//defined output for settings
+function better_speed_instant_intensity() {
+	$value = better_speed_get_other_setting('instant-intensity') ?: "default";
+  echo '<select id="better-speed-instant-intensity" name="better-speed-settings[better-speed-instant-intensity]" style="max-width:none!important">';
+  better_speed_instant_intensity_option($value,'default','After hovering over a link or when the screen is touched (~65ms) - default option');
+  better_speed_instant_intensity_option($value,'mousedown','After pressing the mouse button or when the screen is touched (~80ms)');
+  better_speed_instant_intensity_option($value,'mousedown-only','After pressing the mouse button only (~80ms)');
+  better_speed_instant_intensity_option($value,'viewport','On small screens only, as soon as the link is displayed on screen');
+  better_speed_instant_intensity_option($value,'viewport-all','On all screens, as soon as the link is displayed on screen');
+	better_speed_instant_intensity_option($value,'150','After hovering over a link or when the screen is touched, with delay (~150ms)');
+	better_speed_instant_intensity_option($value,'300','After hovering over a link or when the screen is touched, with delay (~300ms)');
+	echo '</select>';
+}
+function better_speed_instant_intensity_option($value,$code,$name) {
+  echo '<option value="' . $code . '"' . ($value===$code ? ' selected="selected"' : '') . '>' . $name . '</option>';
+}
+
+//defined output for settings
+function better_speed_instant_external() {
+	$checked = "";
+	if(better_speed_check_other_setting('instant-external')) {
+		$checked = " checked";
+	}
+  echo '<label><input id="better-speed-instant-external" name="better-speed-settings[better-speed-instant-external]" type="checkbox" value="YES"' . $checked . '> ' . __('Preload links that point outside of your website', 'whysoslow');
+}
 
 //add actions
 if(is_admin()) {
@@ -673,9 +776,7 @@ function better_speed_admin_scripts() {
 	if(isset($_GET["page"]) && $_GET["page"]==="better-speed-settings") {
 	  wp_enqueue_script('jquery-ui-core');
 	  wp_enqueue_script('jquery-ui-tabs');
-
 		wp_enqueue_script('better-speed-main-js', plugins_url('main.js', __FILE__),array('jquery','jquery-ui-tabs'),false,true);
-
 		wp_enqueue_style('jquery-ui-tabs-min-css', plugins_url('jquery-ui-tabs.min.css', __FILE__));
 	}
 }
@@ -687,7 +788,7 @@ add_action('admin_enqueue_scripts', 'better_speed_admin_scripts');
 
 //show settings link
 function better_speed_links($links) {
-	$links[] = sprintf('<a href="%s">%s</a>',admin_url('options-general.php?page=better-speed-settings'), __('Settings', 'better-speed-text'));
+	$links[] = sprintf('<a href="%s">%s</a>',admin_url('options-general.php?page=better-speed-settings'), __('Settings', 'whysoslow'));
 	return $links;
 }
 
