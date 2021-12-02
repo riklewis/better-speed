@@ -196,6 +196,20 @@ function better_speed_init() {
     }, 100);
 	}
 
+	//Revisions
+	if(better_speed_check_setting('revisions')) {
+		add_action('wp_loaded', function() {
+			$post_types = get_post_types(array('public' => true), 'names');
+			if(!empty($post_types)) {
+				foreach($post_types as $post_type) {
+					if(post_type_supports($post_type, 'revisions')) {
+						remove_post_type_support($post_type, 'revisions');
+					}
+				}
+			}
+		});
+	}
+
 	//Comments
 	if(better_speed_check_setting('comments')) {
 		add_action('widgets_init', function() {
@@ -379,6 +393,7 @@ function better_speed_settings() {
   add_settings_field('better-speed-features-rssfeeds', __('RSS Feeds', 'whysoslow'), 'better_speed_features_rssfeeds', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-restapi', __('REST API', 'whysoslow'), 'better_speed_features_restapi', 'better-speed', 'better-speed-section-features');
   add_settings_field('better-speed-features-blocks', __('Block Library', 'whysoslow'), 'better_speed_features_blocks', 'better-speed', 'better-speed-section-features');
+  add_settings_field('better-speed-features-revisions', __('Revisions', 'whysoslow'), 'better_speed_features_revisions', 'better-speed', 'better-speed-section-features');
 
   add_settings_section('better-speed-section-others', __('Settings', 'whysoslow'), 'better_speed_section_others', 'better-speed-others');
   add_settings_field('better-speed-others-timings', __('Server Timings', 'whysoslow'), 'better_speed_others_timings', 'better-speed-others', 'better-speed-section-others');
@@ -405,6 +420,7 @@ add_filter('whitelist_options', function($whitelist_options) {
   $whitelist_options['better-speed'][] = 'better-speed-features-rssfeeds';
   $whitelist_options['better-speed'][] = 'better-speed-features-restapi';
   $whitelist_options['better-speed'][] = 'better-speed-features-blocks';
+  $whitelist_options['better-speed'][] = 'better-speed-features-revisions';
   $whitelist_options['better-speed'][] = 'better-speed-others-timings';
   $whitelist_options['better-speed'][] = 'better-speed-instant-page';
   $whitelist_options['better-speed'][] = 'better-speed-instant-intensity';
@@ -430,10 +446,96 @@ function better_speed_show_settings() {
     echo ' &nbsp; <a href="https://www.fromdual.com/support-for-mysql-from-oracle" target="_blank"><img src="' . better_speed_badge_maria() . '"></a>';
   }
   echo '  </div>';
+
   echo '  <h1>' . __('Why So Slow?', 'whysoslow') . '</h1>';
 	echo '  <p>' . __('This plugin will allow you to easily remove bloat and turn off unused features, in order to streamline your website and reduce file requests.', 'whysoslow');
 	echo '  <p>' . __('This plugin is <em>not</em> a caching plugin, but should play well with any caching plugin you decide to use.', 'whysoslow');
 	echo '  <br><br>';
+
+  //check for bad plugins - list based on https://wpengine.com/support/disallowed-plugins/
+	if(!function_exists('get_plugins')) {
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+	}
+	$bad_plugins = array(
+    'adminer',
+    'async-google-analytics',
+    'backup',
+    'backup-scheduler',
+    'backupwordpress',
+    'backwpup',
+    'broken-link-checker',
+    'content-molecules',
+    'contextual-related-posts',
+    'duplicator',
+    'dynamic-related-posts',
+    'ezpz-one-click-backup',
+    'file-commander',
+    'fuzzy-seo-booster',
+    'gd-system-plugin',
+    'gd-system-plugin.php',
+    'google-xml-sitemaps-with-multisite-support',
+    'hc-custom-wp-admin-url',
+    'hcs.php',
+    'hello.php',
+    'jr-referrer',
+    'jumpple',
+    'missed-schedule',
+    'ozh-who-sees-ads',
+    'pipdig-power-pack',
+    'portable-phpmyadmin',
+    'recommend-a-friend',
+    'seo-alrp',
+    'si-captcha-for-wordpress',
+    'similar-posts',
+    'spamreferrerblock',
+    'ssclassic',
+    'sspro',
+    'super-post',
+    'superslider',
+    'sweetcaptcha-revolutionary-free-captcha-service',
+    'the-codetree-backup',
+    'toolspack',
+    'ToolsPack',
+    'tweet-blender',
+    'versionpress',
+    'wordpress-gzip-compression',
+    'wp-database-optimizer',
+    'wp-db-backup',
+    'wp-dbmanager',
+    'wp-engine-snapshot',
+    'wp-phpmyadmin',
+    'wp-postviews',
+    'wp-slimstat',
+    'wp-symposium-alerts',
+    'wponlinebackup',
+    'yet-another-featured-posts-plugin',
+    'yet-another-related-posts-plugin',
+	);
+	$all_plugins = get_plugins();
+	$count = 0;
+	foreach($all_plugins as $key => $plugin) {
+		$parts = explode('/', $key);
+		$folder = $parts[0];
+		$file = $parts[1];
+		if(in_array($folder,$bad_plugins) || in_array($file,$bad_plugins)) {
+			if($count++===0) {
+				echo '  <h2>' . __('Bad Plugins', 'whysoslow') . '</h2>';
+				echo '  <p>' . __('The following plugin(s) are known to cause performance issues, and are ', 'whysoslow') . '<a href="https://wpengine.com/support/disallowed-plugins/" target="_blank" rel="noopener">' . __('disallowed by hosts such as WPEngine', 'whysoslow') . '</a>. ' . __('We recommend that you go to the Plugins page and Deactivate and Delete them as soon as possible.', 'whysoslow') . '</p>';
+				echo '  <ul>';
+			}
+			if(array_key_exists("PluginURI",$plugin)) {
+				echo '    <li><a href="' . $plugin["PluginURI"] . '">' . $plugin["Name"] . '</a></li>';
+			}
+			else {
+				echo '    <li>' . $plugin["Name"] . '</li>';
+			}
+		}
+	}
+	if($count>0) {
+		echo '  </ul>';
+		echo '  <br>';
+	}
+
 	echo '  <form action="options.php" method="post">';
 	settings_fields('better-speed');
 
@@ -709,6 +811,14 @@ function better_speed_features_blocks() {
 		$checked = " checked";
 	}
   echo '<label><input id="better-speed-features-blocks" name="better-speed-settings[better-speed-features-blocks]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove the Gutenberg blocks library if you are using Classic Editor <em>(saves 1 file request and ~29kb)</em>', 'whysoslow');
+}
+
+function better_speed_features_revisions() {
+	$checked = "";
+	if(better_speed_check_setting('revisions')) {
+		$checked = " checked";
+	}
+  echo '<label><input id="better-speed-features-revisions" name="better-speed-settings[better-speed-features-revisions]" type="checkbox" value="YES"' . $checked . '> ' . __('Remove support for creating page/post revisions <em>(reduces database queries and size)</em>', 'whysoslow');
 }
 
 //define output for settings section
