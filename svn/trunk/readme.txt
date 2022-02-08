@@ -2,7 +2,7 @@
 Contributors: whysoslow, bettersecurity, riklewis
 Tags: better, security, speed, performance, bloat, slow, whysoslow, instant
 Requires at least: 4.0
-Tested up to: 5.8
+Tested up to: 5.9
 Stable tag: trunk
 Requires PHP: 7.0
 License: GPLv3
