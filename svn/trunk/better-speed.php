@@ -2,7 +2,7 @@
 /*
 Plugin Name:  Why So Slow?
 Description:  Improve the loading speed of your website by removing bloat and unused features <em>(formerly named <strong>Better Speed</strong>)</em>
-Version:      2.0
+Version:      2.1
 Author:       Why So Slow?
 Author URI:   https://whysoslow.co.uk
 License:      GPL3
@@ -557,10 +557,22 @@ function better_speed_show_settings() {
   do_settings_sections('better-speed-instant');
   echo '    </div>';
   echo '    <div id="better-speed-tabs-recommend">';
-  echo '      <a class="better-speed-recommendation" href="https://wp-rocket.me/?ref=dfdb22ef" target="_blank">';
+  echo '      <a class="better-speed-recommendation" href="https://flying-press.com/?campaign=betterspeed&ref=sifz" target="_blank">';
+  echo '        <img src="' . plugins_url('images/flyingpress.svg', __FILE__) . '" width="172px" height="28px" align="left">';
+  echo '        <h3><u>' . __('FlyingPress', 'whysoslow') . '</u> <small><em>(plugin)</em></small></h3>';
+  echo '        <p>' . __('FlyingPress is a lightweight, easy to use and configurable speed optimization plugin for WordPress. Boost your websites&apos; Core Web Vitals in a few clicks.', 'whysoslow') . '</p>';
+  echo '      </a>';
+	echo '      <br>';
+  echo '      <a class="better-speed-recommendation" href="https://shareasale.com/r.cfm?b=1075949&u=2391583&m=74778" target="_blank">';
   echo '        <img src="' . plugins_url('images/wprocket.png', __FILE__) . '" width="172px" height="46px" align="left">';
   echo '        <h3><u>' . __('WP Rocket', 'whysoslow') . '</u> <small><em>(plugin)</em></small></h3>';
   echo '        <p>' . __('WP Rocket is the most powerful web performance plugin in the world. It will instantly reduce your load time and boost your Google PageSpeed and Core Web Vitals scores. No coding skills needed.', 'whysoslow') . '</p>';
+  echo '      </a>';
+	echo '      <br>';
+  echo '      <a class="better-speed-recommendation" href="https://rocketcdn.me/?ref=betterspeed" target="_blank">';
+  echo '        <img src="' . plugins_url('images/wprocket.png', __FILE__) . '" width="172px" height="46px" align="left">';
+  echo '        <h3><u>' . __('RocketCDN', 'whysoslow') . '</u> <small><em>(CDN)</em></small></h3>';
+  echo '        <p>' . __('RocketCDN is a custom Content Delivery Network created by the WP Rocket team. It provides fast content delivery anywhere in the world and reduces website loading time, making a website faster for visitors far away from where the server is located.', 'whysoslow') . '</p>';
   echo '      </a>';
 	echo '      <br>';
   echo '      <a class="better-speed-recommendation" href="https://shortpixel.com/wp/af/IJLMBK5514013" target="_blank">';
