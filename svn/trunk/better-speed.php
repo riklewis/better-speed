@@ -310,6 +310,11 @@ function better_speed_wp_enqueue_scripts() {
 			wp_deregister_script('heartbeat');
 		}
 	}
+
+	//jQuery passive event listeners
+	if(better_speed_check_other_setting('others-passive')) {
+		wp_add_inline_script('jquery', 'jQuery.event.special.touchstart={setup:function(e,t,s){this.addEventListener("touchstart",s,{passive:!t.includes("noPreventDefault")})}},jQuery.event.special.touchmove={setup:function(e,t,s){this.addEventListener("touchmove",s,{passive:!t.includes("noPreventDefault")})}},jQuery.event.special.wheel={setup:function(e,t,s){this.addEventListener("wheel",s,{passive:!0})}},jQuery.event.special.mousewheel={setup:function(e,t,s){this.addEventListener("mousewheel",s,{passive:!0})}};', 'after');
+	}
 }
 add_action('wp_enqueue_scripts', 'better_speed_wp_enqueue_scripts');
 
@@ -396,7 +401,8 @@ function better_speed_settings() {
   add_settings_field('better-speed-features-revisions', __('Revisions', 'whysoslow'), 'better_speed_features_revisions', 'better-speed', 'better-speed-section-features');
 
   add_settings_section('better-speed-section-others', __('Settings', 'whysoslow'), 'better_speed_section_others', 'better-speed-others');
-  add_settings_field('better-speed-others-timings', __('Server Timings', 'whysoslow'), 'better_speed_others_timings', 'better-speed-others', 'better-speed-section-others');
+  add_settings_field('better-speed-others-timings', __('Add Server Timings', 'whysoslow'), 'better_speed_others_timings', 'better-speed-others', 'better-speed-section-others');
+  add_settings_field('better-speed-others-passive', __('Use Passive Listeners', 'whysoslow'), 'better_speed_others_passive', 'better-speed-others', 'better-speed-section-others');
 
   add_settings_section('better-speed-section-instant', __('Instant Page', 'whysoslow'), 'better_speed_section_instant', 'better-speed-instant');
   add_settings_field('better-speed-instant-page', __('Instant Page', 'whysoslow'), 'better_speed_instant_page', 'better-speed-instant', 'better-speed-section-instant');
@@ -422,6 +428,7 @@ add_filter('whitelist_options', function($whitelist_options) {
   $whitelist_options['better-speed'][] = 'better-speed-features-blocks';
   $whitelist_options['better-speed'][] = 'better-speed-features-revisions';
   $whitelist_options['better-speed'][] = 'better-speed-others-timings';
+  $whitelist_options['better-speed'][] = 'better-speed-others-passive';
   $whitelist_options['better-speed'][] = 'better-speed-instant-page';
   $whitelist_options['better-speed'][] = 'better-speed-instant-intensity';
   $whitelist_options['better-speed'][] = 'better-speed-instant-external';
@@ -896,7 +903,16 @@ function better_speed_others_timings() {
 	if(better_speed_check_other_setting('others-timings')) {
 		$checked = " checked";
 	}
-  echo '<label><input id="better-speed-others-timings" name="better-speed-settings[better-speed-others-timings]" type="checkbox" value="YES"' . $checked . '> ' . __('Add <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Server-Timing" target="_blank" rel="noopener">Server Timing</a> headers to aid debugging', 'whysoslow');
+  echo '<label><input id="better-speed-others-timings" name="better-speed-settings[better-speed-others-timings]" type="checkbox" value="YES"' . $checked . '> ' . __('Add <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Server-Timing" target="_blank" rel="noopener">Server Timing</a> headers - this won&apos;t speed things up but can aid debugging', 'whysoslow');
+}
+
+//defined output for settings
+function better_speed_others_passive() {
+	$checked = "";
+	if(better_speed_check_other_setting('others-passive')) {
+		$checked = " checked";
+	}
+  echo '<label><input id="better-speed-others-passive" name="better-speed-settings[better-speed-others-passive]" type="checkbox" value="YES"' . $checked . '> ' . __('Use <a href="https://web.dev/uses-passive-event-listeners/" target="_blank" rel="noopener">passive listeners</a> to improve scrolling performance', 'whysoslow');
 }
 
 //define output for settings section
